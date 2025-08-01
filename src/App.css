@@ -1,3 +1,23 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+body {
+  font-family: 'Poppins', sans-serif;
+}
+
+:root {
+    /*Homepage*/
+    --color-bg-menu-toggle-mb: #F9F8F6;
+    --color-title-h1: #26231E;
+    --color-description-title: #4a4a4a;
+    --color-Author: #75716B;
+    --color-Author-Description: #75716B;
+
+    --color-text-login: #26231E;
+    --color-bg-login: #ffffff;
+    --color-border-login: #75716B;
+    --color-text-Signup: #ffffff;
+    --color-bg-Signup: #26231E;
+    --color-border-Signup: #26231E;
+}

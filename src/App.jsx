@@ -1,9 +1,15 @@
+import NavBar from './components/Navbar';
+import HeroSection from './components/HeroSection';
 import './App.css';
 
 function App() {
   return (
     <>
-      <div className="bg-blue-500 text-white p-4">Hello Tailwind</div>
+      {/*Navbar*/}
+      <NavBar />
+
+      {/*Herosection*/}
+      <HeroSection />
     </>
   )
 }
