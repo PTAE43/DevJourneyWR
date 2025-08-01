@@ -1,3 +1,5 @@
+import imghero from "../assets/image-header/img-hero.jpg";
+
 const Herosection = () => (
 
     <div className="flex flex-col md:flex-row justify-center items-center md:mx-auto md:w-[1200px] h-auto py-8 px-5 gap-5">
@@ -8,7 +10,7 @@ const Herosection = () => (
                 Discover a World of Knowledge at Your Fingertips. Your Daily Dose of Inspiration and Information.</span>
         </div>
         <div className="w-full h-[470px] overflow-hidden md:w-1/3">
-            <img src="/image-header/img-hero.jpg" alt="imgage-Thompson P." className="w-full h-full rounded-2xl object-cover opacity-80" />
+            <img src={imghero} alt="imgage-Thompson P." className="w-full h-full rounded-2xl object-cover opacity-80" />
         </div>
         <div className="md:w-1/3">
             <div className="font-medium text-[12px] text-[var(--color-Author)]">-Author</div>
