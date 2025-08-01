@@ -21,8 +21,3 @@ body {
     --color-bg-Signup: #26231E;
     --color-border-Signup: #26231E;
 }
-
-/*set padding-left&right*/
-.p10_Hero{
-    @apply flex flex-col justify-center items-center py-5 px-5;
-}
