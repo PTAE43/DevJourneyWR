@@ -8,14 +8,14 @@ const NavBar = () => {
             <div className="flex justify-between items-center md:mx-auto md:w-[1200px]">
                 {/* Logo */}
                 <div>
-                    <img src="/src/assets/image-header/hh..png" alt="Logo" className="w-[24px] md:w-[44px] h-auto" />
+                    <img src="/image-header/hh..png" alt="Logo" className="w-[24px] md:w-[44px] h-auto" />
                 </div>
 
                 {/* Toggle Button */}
                 <button
                     onClick={() => setIsOpen(!isOpen)}
                     className="md:hidden text-2xl focus:outline-none z-50">
-                    <img src="/src/assets/image-header/menu-toggle.png" alt="Menu" />
+                    <img src="/image-header/menu-toggle.png" alt="Menu" />
                 </button>
 
                 {/* Mobile Menu */}
