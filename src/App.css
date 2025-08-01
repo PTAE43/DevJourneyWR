@@ -1,3 +1,23 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+body {
+  font-family: 'Poppins', sans-serif;
+}
+
+:root {
+    --color-title-h1: #26231E;
+    --color-description-title: #4a4a4a;
+    --color-Author: #75716B;
+    --color-Author-Description: #75716B;
+}
+
+/*set padding-left&right*/
+.p10_header{
+    @apply flex justify-between py-5 px-0;
+}
+
+.p10_Hero{
+    @apply flex flex-col justify-center items-center py-5 px-5;
+}
