@@ -23,6 +23,13 @@ body {
 /*Footer*/
   --color-text-footer: #43403B;
   --color-bg-footer: #EFEEEB;
+/*Section Articles & Search*/
+  --color-title-latest: #26231E;
+  --color-text-selected: #43403B;
+  --color-bg-selected: #DAD6D1;
+  --color-text-articles: #75716B;
+  --color-text-articles-hover:#26231E;
+  --color-bg-articles: #EFEEEB;
     
 }
 
