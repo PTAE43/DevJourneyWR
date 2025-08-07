@@ -7,19 +7,23 @@ body {
 }
 
 :root {
-    /*Homepage*/
-    --color-bg-menu-toggle-mb: #F9F8F6;
-    --color-title-h1: #26231E;
-    --color-description-title: #4a4a4a;
-    --color-Author: #75716B;
-    --color-Author-Description: #75716B;
-
-    --color-text-login: #26231E;
-    --color-bg-login: #ffffff;
-    --color-border-login: #75716B;
-    --color-text-Signup: #ffffff;
-    --color-bg-Signup: #26231E;
-    --color-border-Signup: #26231E;
+  /*Homepage*/
+  --color-bg-menu-toggle-mb: #F9F8F6;
+  --color-title-h1: #26231E;
+  --color-description-title: #4a4a4a;
+  --color-Author: #75716B;
+  --color-Author-Description: #75716B;
+/*Login-Signup*/
+  --color-text-login: #26231E;
+  --color-bg-login: #ffffff;
+  --color-border-login: #75716B;
+  --color-text-Signup: #ffffff;
+  --color-bg-Signup: #26231E;
+  --color-border-Signup: #26231E;
+/*Footer*/
+  --color-text-footer: #43403B;
+  --color-bg-footer: #EFEEEB;
+    
 }
 
 /*---break---*/
