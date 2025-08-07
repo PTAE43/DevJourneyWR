@@ -1,6 +1,7 @@
 import NavBar from './components/Navbar';
 import HeroSection from './components/HeroSection';
 import './App.css';
+import { Button } from "@/components/ui/button";
 
 function App() {
   return (
@@ -10,6 +11,7 @@ function App() {
 
       {/*Herosection*/}
       <HeroSection />
+      <Button>Hello world</Button>
     </>
   )
 }
