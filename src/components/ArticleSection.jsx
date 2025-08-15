@@ -21,10 +21,10 @@ const ArticleSection = () => {
 
   return (
     <>
-      <div className="p-4 font-semibold text-[24px] text-[var(--color-title-latest)]">Latest articles</div>
-      <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between p-4 bg-[var(--color-bg-icon)] rounded-xl">
+      <div className="p-4 font-semibold text-[24px] text-[var(--color-title-latest)] md:mx-auto md:w-[1200px]">Latest articles</div>
+      <div className="flex flex-col gap-4 p-4 bg-[var(--color-bg-icon)] rounded-xl md:flex-row md:items-center md:justify-between md:mx-auto md:w-[1200px] md:m-[20px] md:px-[24px] md:py-[16px] md:rounded-lg md:bg-[var(--color-bg-articles-desktop)]">
         {/* แสดงใน Desktop ซ่อนใน Mobile */}
-        <div className="hidden md:bg-[--color-bg-articles] md:flex gap-2">
+        <div className="hidden md:flex md:bg-[--color-bg-articles] gap-2">
           {categories.map(articles => (
             <button key={articles.value} onClick={() => _setSelectedCategory(articles.value)}
               className={`w-[113px] h-[48px] px-4 py-2 rounded-md text-sm font-medium transition-all
@@ -40,7 +40,7 @@ const ArticleSection = () => {
         </div>
 
         {/* ช่อง Search */}
-        <div className="relative w-full max-w-md">
+        <div className="relative w-full md:w-[360px] max-w-md">
           <input
             type="text"
             placeholder="Search"
