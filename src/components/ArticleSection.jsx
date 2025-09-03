@@ -5,8 +5,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
-import { useState } from "react"
+import { useState } from "react";
 import { Search } from "lucide-react";
+import { BlogCard } from "./Card/cardPost";
 
 /*Dropdown*/
 const categories = [
@@ -69,6 +70,17 @@ const ArticleSection = () => {
           </Select>
         </div>
       </div>
+      
+      {/* {_filterBtnActice === 2 && (
+        <div className="card_wrap">
+          {BlogCard && BlogCard.slice(0, 6).map((e, i) => (
+            <div className="card_item" key={i}>
+              <BlogCard data={e} />
+            </div>
+          ))}
+        </div>
+      )} */}
+
     </>
   );
 };
