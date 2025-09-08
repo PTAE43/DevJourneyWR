@@ -1,6 +1,6 @@
 import React from "react";
 
-export function BlogCard({ data }) {
+function CardPost({ data }) {
     return (
         <div className="flex flex-col gap-4">
             <a href="#" className="relative h-[212px] sm:h-[360px]">
@@ -33,3 +33,4 @@ export function BlogCard({ data }) {
     );
 }
 
+export default CardPost;
