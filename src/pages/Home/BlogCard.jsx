@@ -1,18 +1,16 @@
 // src/components/PostsGrid.jsx
 import React from "react";
 import { FileSearch as FileSearchIcon} from "lucide-react";
-import CardPost from "./Card/cardPost"; // ถ้าเป็น named export ให้เปลี่ยนเป็น { CardPost }
+import CardPost from "../../components/Card/cardPost"; // ถ้าเป็น named export ให้เปลี่ยนเป็น { CardPost }
 
 const CARD_MIN_H = "min-h-[300px] md:min-h-[320px]"; //เอาไว้มาปรับความสูง
 
 export default function BlogCard({ posts = []}) {
-  const items = posts.slice(0, 6);
-
   return (
     <div className="md:mx-auto md:w-[1200px] p-4">
-      {items.length ? (
+      {posts.length ? (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {items.map((p) => (
+          {posts.map((p) => (
             <CardPost key={p.id} data={p} />
           ))}
         </div>

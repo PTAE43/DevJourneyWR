@@ -1,9 +1,9 @@
 // import { Linkedin } from 'lucide-react';
 // import { Github } from 'lucide-react';
 // import { Facebook } from 'lucide-react';
-import iconGithub_black from "../assets/icon/footer/Github_black.png"
-import iconGoogle_black from "../assets/icon/footer/Google_black.png"
-import iconLinkedIN_black from "../assets/icon/footer/LinkedIN_black.png"
+import iconGithub_black from "../../assets/icon/footer/Github_black.png";
+import iconGoogle_black from "../../assets/icon/footer/Google_black.png";
+import iconLinkedIN_black from "../../assets/icon/footer/LinkedIN_black.png";
 
 const Footer = () => (
     <div className="flex justify-center items-center bg-[var(--color-bg-footer)] h-[152px] lg:h-[144px] bottom-0">

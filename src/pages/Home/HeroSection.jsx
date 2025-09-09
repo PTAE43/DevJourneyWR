@@ -1,4 +1,4 @@
-import imghero from "../assets/image-header/img-hero.jpg";
+import imghero from "../../assets/image-header/img-hero.jpg";
 
 const Herosection = () => (
 
