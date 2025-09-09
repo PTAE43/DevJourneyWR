@@ -45,9 +45,19 @@ const ArticleSection = () => {
 
   useEffect(() => {
     setVisible(PAGE_SIZE);
+    setIsLoading(false);
   }, [selectedCategory, query]);
 
   const viewMore = visible < posts.length;
+
+  const handleViewMore = () => {
+    if (!viewMore || isLoading) return;
+    setIsLoading(true);
+    setTimeout(() => {
+      setVisible((v) => Math.min(v + PAGE_SIZE, posts.length));
+      setIsLoading(false);
+    }, 500);
+  };
 
   return (
     <>
@@ -109,16 +119,16 @@ const ArticleSection = () => {
           {/*View more*/}
           <div className="text-center mt-8">
             <button
-              onClick={() => setVisible((v) => v + PAGE_SIZE)} //6
-              disabled={!viewMore}
+              onClick={handleViewMore} //4
+              disabled={!viewMore || isLoading}
               className={`hover:text-muted-foreground font-medium underline 
-                ${viewMore
+                ${viewMore && !isLoading
                   ? "hover:bg-gray-50 active:scale-[0.99]"
                   : "opacity-50 cursor-not-allowed"
                 }`}
-              aria-disabled={!viewMore}
+              aria-disabled={!viewMore || isLoading}
             >
-              {viewMore ? "View more" : "No more articles"}
+              {isLoading ? "Loading..." : viewMore ? "View more" : "No more articles."}
             </button>
           </div>
         </>
