@@ -1,7 +1,7 @@
-import NavBar from './components/Navbar';
-import HeroSection from './components/HeroSection';
-import Footer from './components/Footer';
-import ArticleSextion from './components/ArticleSection';
+import NavBar from './components/Layout/Navbar';
+import HeroSection from './pages/Home/HeroSection';
+import Footer from './components/Layout/Footer';
+import ArticleSextion from './pages/Home/ArticleSection';
 import './App.css';
 import { Button } from "@/components/ui/button"
 

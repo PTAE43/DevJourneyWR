@@ -1,5 +1,5 @@
-import hhLogo from "../assets/image-header/hh.png";
-import menutoggle from "../assets/image-header/menu-toggle.png";
+import hhLogo from "../../assets/image-header/hh.png";
+import menutoggle from "../../assets/image-header/menu-toggle.png";
 import React, { useState } from "react";
 
 const NavBar = () => {
