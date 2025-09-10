@@ -1,6 +1,7 @@
 import hhLogo from "../../assets/image-header/hh.png";
 import menutoggle from "../../assets/image-header/menu-toggle.png";
 import React, { useState } from "react";
+import { Link } from "react-router-dom";
 
 const NavBar = () => {
     const [isOpen, setIsOpen] = useState(false);
@@ -27,20 +28,20 @@ const NavBar = () => {
                         ${isOpen ? "opacity-100 translate-x-0" : "opacity-0 -translate-x-full"}
                         md:hidden`}>
                     <li className="border border-[var(--color-border-login)] rounded-full bg-[var(--color-bg-login)] hover:text-blue-500 py-3 w-full">
-                        <a href="#" className="flex justify-center text-[var(--color-text-login)]">Log in</a>
+                        <Link to="/login" className="flex justify-center text-[var(--color-text-login)]">Log in</Link>
                     </li>
                     <li className="border border-[var(--color-border-Signup)] rounded-full bg-[var(--color-bg-Signup)] hover:text-blue-500 py-3 w-full">
-                        <a href="#" className="flex justify-center text-[var(--color-text-Signup)]">Sign up</a>
+                        <Link to="/register" className="flex justify-center text-[var(--color-text-Signup)]">Sign up</Link>
                     </li>
                 </ul>
 
                 {/* Desktop Menu */}
                 <ul className="md:flex hidden gap-4">
                     <li className="justify-center items-center border border-[var(--color-border-login)] rounded-full bg-[var(--color-bg-login)] hover:text-blue-500 w-[127px] h-[48px] flex">
-                        <a href="#" className="text-[var(--color-text-login)]">Log in</a>
+                        <Link to="/login" className="text-[var(--color-text-login)]">Log in</Link>
                     </li>
                     <li className="justify-center items-center border border-[var(--color-border-Signup)] rounded-full bg-[var(--color-bg-Signup)] hover:text-blue-500 w-[127px] h-[48px] flex">
-                        <a href="#" className="text-[var(--color-text-Signup)]">Sign up</a>
+                        <Link to="/register" className="text-[var(--color-text-Signup)]">Sign up</Link>
                     </li>
                 </ul>
             </div>
