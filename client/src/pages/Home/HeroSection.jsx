@@ -2,7 +2,7 @@ import imghero from "../../assets/image-header/img-hero.jpg";
 
 const Herosection = () => (
 
-    <div className="flex flex-col md:flex-row justify-center items-center md:mx-auto h-auto py-8 px-5 gap-5">
+    <div className="flex flex-col md:flex-row justify-center items-center md:mx-auto max-w-[1200px] h-auto py-8 px-5 gap-5">
         <div className="flex flex-col pt-5 md:w-1/3">
             <h1 className="font-semibold text-[40px] md:text-[52px] leading-[1.2] text-center md:text-right text-[var(--color-title-h1)]">
                 Stay Informed, Stay Inspired</h1>
