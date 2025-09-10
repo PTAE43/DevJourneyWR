@@ -101,4 +101,7 @@ body {
   body {
     @apply bg-background text-foreground;
   }
+  .category_posts{
+    @apply bg-green-200 rounded-full px-3 py-1 text-sm font-semibold text-green-600;
+  }
 }
