@@ -6,8 +6,8 @@ const NavBar = () => {
     const [isOpen, setIsOpen] = useState(false);
 
     return (
-        <nav className="bg-white shadow-md px-6 py-4 relative z-50">
-            <div className="flex justify-between items-center md:mx-auto md:w-[1200px]">
+        <nav className="md:mx-auto bg-white shadow-md px-6 py-4 relative z-50">
+            <div className="flex justify-between items-center md:mx-auto max-w-[1200px]">
                 {/* Logo */}
                 <div>
                     <img src={hhLogo} alt="Logo" className="w-[24px] md:w-[44px] h-auto" />
