@@ -9,8 +9,7 @@ function CardPost({ data }) {
             </a>
             <div className="flex flex-col">
                 <div className="flex">
-                    <span
-                        className="bg-green-200 rounded-full px-3 py-1 text-sm font-semibold text-green-600 mb-2">
+                    <span className="category_posts">
                         {data.category}
                     </span>
                 </div>

@@ -1,27 +1,30 @@
-import NavBar from './components/Layout/Navbar';
-import HeroSection from './pages/Home/HeroSection';
-import Footer from './components/Layout/Footer';
-import ArticleSextion from './pages/Home/ArticleSection';
-import './App.css';
-import { Button } from "@/components/ui/button"
+import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import NavBar from "./components/Layout/Navbar";
+import HeroSection from "./pages/Home/HeroSection";
+import ArticleSection from "./pages/Home/ArticleSection";
+import Footer from "./components/Layout/Footer";
+import SiglePost from "./pages/Blog/SiglePost";
+import "./App.css";
 
-
-function App() {
+export default function App() {
   return (
-    <>
-      {/*Navbar*/}
-      <NavBar />
-      {/*Herosection*/}
-      <HeroSection />
-      <ArticleSextion />
-
-      <div className="flex flex-wrap justify-center items-center gap-2 md:flex-row">
-        <Button>Button</Button>
+    <Router>
+      <div className="min-h-screen">
+        <NavBar />
+        <main className="flex-1">
+          <Routes>
+            <Route path="/" element={
+              <>
+                <HeroSection />
+                <ArticleSection />
+              </>
+            }
+            />
+            <Route path="/posts/:id" element={<SiglePost />} />
+          </Routes>
+        </main>
+        <Footer />
       </div>
-
-      <Footer />
-    </>
-  )
+    </Router>
+  );
 }
-
-export default App;

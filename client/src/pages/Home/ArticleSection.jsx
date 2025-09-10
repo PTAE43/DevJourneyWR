@@ -15,7 +15,7 @@ const categories = [
 ];
 
 const PAGE_SIZE = 4;
-const CARD_MIN_H = "min-h-[300px] md:min-h-[320px]";
+const CARD_MIN_H = "min-h-[800px] md:min-h-[820px]";
 
 const ArticleSection = () => {
   const [selectedCategory, setSelectedCategory] = useState("highlight");
