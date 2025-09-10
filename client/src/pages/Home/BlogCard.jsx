@@ -7,7 +7,7 @@ const CARD_MIN_H = "min-h-[300px] md:min-h-[320px]"; //เอาไว้มา�
 
 export default function BlogCard({ posts = []}) {
   return (
-    <div className="md:mx-auto md:w-[1200px] p-4">
+    <div className="md:mx-auto p-4 max-w-[1200px]">
       {posts.length ? (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {posts.map((p) => (

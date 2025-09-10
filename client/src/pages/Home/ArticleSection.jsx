@@ -60,11 +60,11 @@ const ArticleSection = () => {
 
   return (
     <>
-      <div className="p-4 font-semibold text-[24px] text-[var(--color-title-latest)] md:mx-auto md:w-[1200px]">
+      <div className="p-4 font-semibold text-[24px] text-[var(--color-title-latest)] md:mx-auto max-w-[1200px]">
         Latest articles
       </div>
 
-      <div className="flex flex-col gap-4 p-4 bg-[var(--color-bg-icon)] rounded-xl md:flex-row md:items-center md:justify-between md:mx-auto md:w-[1200px] md:m-[20px] md:px-[24px] md:py-[16px] md:rounded-lg md:bg-[var(--color-bg-articles-desktop)]">
+      <div className="flex flex-col gap-4 p-4 bg-[var(--color-bg-icon)] rounded-xl md:flex-row md:items-center md:justify-between md:mx-auto max-w-[1200px] md:m-[20px] md:px-[24px] md:py-[16px] md:rounded-lg md:bg-[var(--color-bg-articles-desktop)]">
         {/* Desktop categories */}
         <div className="hidden md:flex md:bg-[var(--color-bg-articles)] gap-2">
           {categories.map((c) => (
