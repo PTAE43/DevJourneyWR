@@ -60,7 +60,7 @@ const ArticleSection = () => {
 
   return (
     <>
-      <div className="p-4 font-semibold text-[24px] text-[var(--color-title-latest)] md:mx-auto max-w-[1200px]">
+      <div className="md:mx-auto max-w-[1200px] p-4 font-semibold text-[24px] text-[var(--color-title-latest)] ">
         Latest articles
       </div>
 
@@ -119,7 +119,7 @@ const ArticleSection = () => {
       {/* Posts */}
       {isLoading && posts.length === 0 ? (
         // โหลดครั้งแรก → กล่องสูงตาม CARD_MIN_H
-        <div className="md:mx-auto md:w-[1200px] p-4">
+        <div className="md:mx-auto max-w-[1200px] p-4">
           <div className={`rounded-xl border border-black/5 dark:border-white/10 bg-[var(--color-bg-articles-desktop)]/60 ${CARD_MIN_H} grid place-items-center`}>
             <p className="text-sm text-[var(--color-text-articles)]/70">Loading...</p>
           </div>
@@ -143,7 +143,7 @@ const ArticleSection = () => {
         </>
       ) : (
         // ไม่มีผลลัพธ์ → กล่องสูงเท่าการ์ดเหมือนกัน
-        <div className="md:mx-auto md:w-[1200px] p-4">
+        <div className="md:mx-auto max-w-[1200px] p-4">
           <div className={`rounded-xl border border-black/5 dark:border-white/10 bg-[var(--color-bg-articles-desktop)]/60 ${CARD_MIN_H} grid place-items-center`}>
             <p className="text-sm text-gray-500">No articles found</p>
           </div>

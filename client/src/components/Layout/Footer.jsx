@@ -6,7 +6,7 @@ import iconGoogle_black from "../../assets/icon/footer/Google_black.png";
 import iconLinkedIN_black from "../../assets/icon/footer/LinkedIN_black.png";
 
 const Footer = () => (
-    <div className="flex justify-center items-center md:mx-auto  bg-[var(--color-bg-footer)] h-[132px] lg:h-[124px] bottom-0">
+    <div className="flex justify-center items-center md:mx-auto bg-[var(--color-bg-footer)] h-[132px] lg:h-[124px] bottom-0">
         <div className="lg:flex lg:justify-between lg:mx-auto lg:w-[1200px] max-w-[1200px] lg:px-5">
             <div className="flex py-5 gap-4">
                 <div className="font-medium text-[var(--color-text-footer)]">Get in touch</div>
