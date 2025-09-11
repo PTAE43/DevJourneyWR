@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
-import { api } from "@/lib/api";
+// import { api } from "@/lib/api";
+import { supabase } from "../../lib/supabaseClient";
 
 function Register() {
 
@@ -22,20 +23,21 @@ function Register() {
         setError("");
         setLoading(true);
 
-        try {
-            const { data } = await api.post("/auth/register", { fullname, username, email, password });
-            localStorage.setItem("token", data.token);
-            if (data.user) {
-                localStorage.setItem("user", JSON.stringify(data.user));
+        const { data, error } = await supabase.auth.signUp({
+            email,
+            password,
+            options: {
+                data: { fullname, username },
+                emailRedirectTo: `${window.location.origin}/login`
             }
-            navigate("/");
+        });
 
-        } catch (error) {
-            return setError(error?.response?.message || "Incorrect information.");
-        } finally {
-            return setLoading(false);
-        }
-    }
+        setLoading(false);
+        if (error) return setError(error.message || "Register failed.");
+
+        navigate("/login");
+    };
+
 
     return (
         <div className="min-h-screen">
@@ -84,12 +86,21 @@ function Register() {
                         required
                     />
                 </div>
+
+                <label>Confirm password</label>
+                <div>
+                    <input
+                        type="password"
+                        className="w-full rounded-md border px-3 py-2"
+                        value={confirm}
+                        onChange={(e) => setConfirm(e.target.value)}
+                        required
+                    />
+                </div>
+
                 {error && <p className="text-sm text-red-600">{error}</p>}
 
-                <button
-                    type="submit"
-                    disabled={loading}
-                >
+                <button type="submit" disabled={loading}>
                     {loading ? "loading.." : "Sign up"}
                 </button>
 

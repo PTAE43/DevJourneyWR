@@ -4,8 +4,8 @@ import HeroSection from "./pages/Home/HeroSection";
 import ArticleSection from "./pages/Home/ArticleSection";
 import Footer from "./components/Layout/Footer";
 import SiglePost from "./pages/Blog/SiglePost";
-import Login from "./pages/About/Login";
-import Register from "./pages/About/Register";
+import Login from "./pages/Auth/Login";
+import Register from "./pages/Auth/Register";
 import { Toaster } from "@/components/ui/sonner";
 import "./App.css";
 

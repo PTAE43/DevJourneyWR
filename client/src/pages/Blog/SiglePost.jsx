@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useParams, Link } from "react-router-dom";
-import { api } from "../../lib/api";
+// import { api } from "../../lib/api";
+import { supabase } from "../../lib/supabaseClient";
 import SkeletonPost from "@/components/Skeletons/SkeletonsPost";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
@@ -17,11 +18,19 @@ export default function SiglePost() {
         (async () => {
             try {
                 setLoading(true);
-                const { data } = await api.get(`/posts/${id}`);
-                setPost(data.post || data.data || data);
+                const { data, error } = await supabase
+                    .from("posts")
+                    .select(`
+                        id, title, description, content, images, created_at, published, likes_count,
+                        category:categories!posts_category_id_fkey ( id, name )
+                        `)
+                    .eq("id", id)
+                    .single();
+                if (error) throw error;
+                setPost(data);
                 window.scrollTo(0, 0);
-            } catch (e) {
-                setError(e?.response?.data?.message || "Failed to load post.");
+            } catch (error) {
+                setError(error.message || "Failed to load post.");
             } finally {
                 setLoading(false);
             }
@@ -54,8 +63,8 @@ export default function SiglePost() {
             <div className="mt-6 grid grid-cols-1 gap-6 lg:grid-cols-3">
                 <div className="lg:col-span-2">
                     <div className="flex items-center md:py-4">
-                        <span className="category_posts">{post.category}</span>
-                        <span className="pl-4">{post.date}</span>
+                        <span className="category_posts">{post.category?.name}</span>
+                        <span className="pl-4">{post.created_at}</span>
                     </div>
                     <h1 className="mt-2 leading-[32px] md:leading-[40px] text-2xl md:text-4xl font-bold text-[var(--color-h1-title)]">
                         {post.title}
@@ -76,7 +85,7 @@ export default function SiglePost() {
                         <div className="lg:col-span-1">
                             <button className="flex items-center rounded-full border-2 px-8 py-2 bg-white hover:text-white hover:bg-[var(--color-button-like-hover)] gap-2">
                                 <img src="/images/posts/happy_light.png" width={24} height={24} className="rounded-full bg-white" />
-                                {post.likes}
+                                {post.likes_count}
                             </button>
                         </div>
                         <div className="flex justify-end lg:col-span-2 gap-2">
