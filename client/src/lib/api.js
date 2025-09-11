@@ -1,9 +1,9 @@
 import axios from "axios";
-import { createClient } from '@supabase/supabase-js'
+import { createClient } from "@supabase/supabase-js";
 
-const supabaseUrl = 'https://rmvgejnzfqkcondlkpbf.supabase.co'
-const supabaseKey = process.env.VITE_SUPABASE_ANON_KEY
-const supabase = createClient(supabaseUrl, supabaseKey)
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+const supabase = createClient(supabaseUrl, supabaseAnonKey)
 
 export const api = axios.create({
     baseURL: import.meta.env.VITE_API_URL,
