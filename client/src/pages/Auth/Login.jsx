@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
-import { api } from "@/lib/api";
+// import { api } from "@/lib/api";
+import { supabase } from "../../lib/supabaseClient";
 
 function Login() {
 
@@ -8,34 +9,25 @@ function Login() {
     const [password, setPassword] = useState("");
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState("");
-
     const navigate = useNavigate();
 
     const haddleOnSubmit = async (event) => {
         event.preventDefault();
         setError("");
         setLoading(true);
-
-        try {
-            const { data } = await api.post("/auth/login", { email, password });
-            localStorage.setItem("token", data.token);
-            if (data.user) {
-                localStorage.setItem("user", JSON.stringify(data.user));
-            }
-            navigate("/");
-
-        } catch (error) {
-            return setError(error?.response?.message || "Invalid username or password");
-        } finally {
-            return setLoading(false);
+        const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+        setLoading(false)
+        if (error) {
+            setError(error.message || "Invalid email or password");
+            return;
         }
-    }
+        navigate("/");
+    };
 
     return (
         <div className="min-h-screen">
             <h1>Log in</h1>
             <form onSubmit={haddleOnSubmit} className="space-y-4">
-
                 <label>Email</label>
                 <div>
                     <input
@@ -46,7 +38,6 @@ function Login() {
                         required
                     />
                 </div>
-
                 <label>Password</label>
                 <div>
                     <input
@@ -57,13 +48,8 @@ function Login() {
                         required
                     />
                 </div>
-
                 {error && <p className="text-sm text-red-600">{error}</p>}
-
-                <button
-                    type="submit"
-                    disabled={loading}
-                >
+                <button type="submit" disabled={loading}>
                     {loading ? "loading.." : "Login"}
                 </button>
 
