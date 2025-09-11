@@ -6,6 +6,7 @@ import Footer from "./components/Layout/Footer";
 import SiglePost from "./pages/Blog/SiglePost";
 import Login from "./pages/About/Login";
 import Register from "./pages/About/Register";
+import { Toaster } from "@/components/ui/sonner";
 import "./App.css";
 
 export default function App() {
@@ -16,7 +17,7 @@ export default function App() {
         <main className="flex-1">
           <Routes>
             <Route path="/" element={<><HeroSection /><ArticleSection /></>} />
-            <Route path="/posts/:id" element={<SiglePost />} />
+            <Route path="/posts/:id" element={<><SiglePost /><Toaster /></>} />
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
           </Routes>

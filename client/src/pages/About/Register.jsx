@@ -38,7 +38,7 @@ function Register() {
     }
 
     return (
-        <div>
+        <div className="min-h-screen">
             <h1>Sign up</h1>
             <form onSubmit={haddleOnSubmit} className="space-y-4">
                 <label>Name</label>
