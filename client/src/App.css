@@ -31,6 +31,12 @@ body {
   --color-text-articles-hover:#26231E;
   --color-bg-articles: #EFEEEB;
   --color-bg-articles-desktop: #EFEEEB;
+  /*Font Content*/
+  --color-h1-title: #26231E;
+  --color-text-content: #43403B;
+  --color-bg-author: #efeeeb50;
+  --color-bg-like-share: #EFEEEB;
+  --color-button-like-hover: #ff001e;
     
 }
 

@@ -32,7 +32,7 @@ function Login() {
     }
 
     return (
-        <div>
+        <div className="min-h-screen">
             <h1>Log in</h1>
             <form onSubmit={haddleOnSubmit} className="space-y-4">
 
