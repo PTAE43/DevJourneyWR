@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useParams, Link } from "react-router-dom";
 // import { api } from "../../lib/api";
-import { supabase } from "../../lib/supabaseClient";
+import { supabase } from "../../lib/supabaseClient.js";
 import SkeletonPost from "@/components/Skeletons/SkeletonsPost";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";

@@ -10,7 +10,7 @@ function CardPost({ data }) {
             <div className="flex flex-col">
                 <div className="flex">
                     <span className="category_posts">
-                        {data.category?.name}
+                        {data.category.name}
                     </span>
                 </div>
                 <a href="#" >
