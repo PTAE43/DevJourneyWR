@@ -4,8 +4,7 @@ import {
 import { useEffect, useState } from "react";
 import { Search as SearchIcon } from "lucide-react";
 import BlogCard from "./BlogCard";
-// import { api } from "../../lib/api.js";
-import { supabase } from "../../lib/supabaseClient.js";
+import { api } from "@/lib/api.js";
 
 const categories = [
   { value: "highlight", label: "Highlight" },
@@ -23,6 +22,7 @@ const ArticleSection = () => {
   const [categoryList, setCategoryList] = useState([{ id: "all", name: "All" }]);
   const [selectedCatId, setSelectedCatId] = useState("all");
   const [query, setQuery] = useState("");
+  const [debouncedQ, setDebouncedQ] = useState("");
   const [posts, setPosts] = useState([]);
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(true);
@@ -30,16 +30,40 @@ const ArticleSection = () => {
 
   useEffect(() => {
     (async () => {
-      const { data, error } = await supabase
-        .from("categories")
-        .select("id,name")
-        .order("name");
-      if (!error && data) setCategoryList([{ id: "all", name: "All" }, ...data]);
+
+      const res = await api.get("/categories");
+      const raw = Array.isArray(res.categories) ? res.categories : [];
+
+      const highlight = raw
+        .find(c => c.name.toLowerCase() === "highlight");
+      const rest = raw
+        .filter(c => c.name.toLowerCase() !== "highlight")
+        .sort((a, b) => a.name.localeCompare(b.name));
+
+      setCategoryList([{ id: "all", name: "All" }, ...rest, ...(highlight ? [highlight] : [])]); //[...(highlight ? [highlight] : []), ...rest, { id: "all", name: "All" }]
+      setSelectedCatId("all"); //highlight ? String(highlight.id) : "all"
+      setPosts([]); setPage(1); setHasMore(true);
+
     })();
   }, []);
 
+  useEffect(() => {
+    const t = setTimeout(() => setDebouncedQ(query.trim()), 300);
+    return () => clearTimeout(t);
+  }, [query]);
+
+  useEffect(() => {
+    if (selectedCatId == null) return;
+    setPage(1);
+    setPosts([]);
+    setHasMore(true);
+  }, [selectedCatId, debouncedQ]);
+
   const handleChangeCategory = (v) => {
-    setSelectedCatId(String(v));
+    const next = v === "all" ? "all" : String(v);
+    console.log("handleChangeCategory =>", v, "->", next);
+    if (String(selectedCatId) === next) return;
+    setSelectedCatId(next);
     setPosts([]);
     setPage(1);
     setHasMore(true);
@@ -49,37 +73,31 @@ const ArticleSection = () => {
     if (isLoading) return;
     setIsLoading(true);
     try {
-      const from = (page - 1) * PAGE_SIZE;
-      const to = from + PAGE_SIZE - 1;
+      const params = { page: String(page), limit: String(PAGE_SIZE) };
 
-      let q = supabase
-        .from("posts")
-        .select(`
-          id, title, description, images, created_at, published,
-          category:categories!posts_category_id_fkey ( id, name )
-        `, { count: "exact" })
-        .eq("published", true)
-        .order("created_at", { ascending: false })
-        .range(from, to);
+      if (selectedCatId !== "all") {
+        const cid = Number(selectedCatId);
+        if (!Number.isNaN(cid)) params.categoryId = cid;
+      }
+      if (debouncedQ) params.q = debouncedQ;
+      if (query.trim()) params.q = query.trim();
 
-      if (selectedCatId !== "all") q = q.eq("category_id", Number(selectedCatId));
-      if (query.trim()) q = q.ilike("title", `%${query.trim()}%`);
+      console.log("GET /posts params =>", params, "selectedCatId =", selectedCatId);
 
-      const { data, count, error } = await q;
+      const res = await api.get("/posts", { params });
+      const list = Array.isArray(res.posts) ? res.posts : [];
+      setPosts(prev => (page === 1 ? list : [...prev, ...list]));
+      setHasMore((res.currentPage ?? page) < (res.totalPages ?? page));
 
-      if (error) throw error;
+    } catch (e) {
+      console.error("fetch posts failed:", e.response?.status, e.response?.data || e.message);
 
-      setPosts(prev => (page === 1 ? data : [...prev, ...data]));
-      setHasMore(page < Math.ceil((count || 0) / PAGE_SIZE));
     } finally {
       setIsLoading(false);
     }
   };
 
-  useEffect(() => {
-    const t = setTimeout(fetchPosts, 250);
-    return () => clearTimeout(t);
-  }, [page, selectedCatId, query]);
+  useEffect(() => { fetchPosts(); }, [page, selectedCatId, query]);
 
   return (
     <>
@@ -135,13 +153,13 @@ const ArticleSection = () => {
       </div>
 
       {/* Posts */}
-      {isLoading && posts.length === 0 ? (
+      {isLoading && posts?.length === 0 ? (
         <div className="md:mx-auto max-w-[1200px] p-4">
           <div className={`rounded-xl border border-black/5 dark:border-white/10 bg-[var(--color-bg-articles-desktop)]/60 ${CARD_MIN_H} grid place-items-center`}>
             <p className="text-sm text-[var(--color-text-articles)]/70">Loading...</p>
           </div>
         </div>
-      ) : posts.length > 0 ? (
+      ) : posts?.length > 0 ? (
         <>
           <BlogCard posts={posts} />
 
