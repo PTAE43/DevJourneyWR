@@ -2,8 +2,8 @@ import axios from "axios";
 import { supabase } from "./supabaseClient";
 
 const baseURL = import.meta.env.DEV
-    ? "/api"                                   // dev → proxy ไป localhost:3000
-    : (import.meta.env.VITE_API_URL || "/api"); // prod → ใช้โดเมน server
+    ? "/api" //เอาไว้ dev ทดสอบตอนเขียนโค้ด
+    : (import.meta.env.VITE_API_URL || "/api"); // --prod → ใช้โดเมน server
 
 export const api = axios.create({ baseURL });
 api.interceptors.response.use(r => r.data, e => Promise.reject(e));
