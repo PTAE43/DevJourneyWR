@@ -16,7 +16,7 @@ async function getPosts(req, res) {
     console.log("req.query:", req.query);
 
     try {
-        const { page = "1", limit = "4", q = "", categoryId } = req.query;
+        const { page = "1", limit = "10", q = "", categoryId } = req.query;
 
         const currentPage = Math.max(parseInt(page, 10) || 1, 1);
         const pageSize = Math.max(parseInt(limit, 10) || 10, 1);

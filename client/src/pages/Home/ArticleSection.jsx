@@ -15,27 +15,30 @@ const categories = [
 ];
 
 const PAGE_SIZE = 4;
-const CARD_MIN_H = "min-h-[800px] md:min-h-[820px]";
+const CARD_MIN_H = "min-h-[700px] md:min-h-[720px]";
 
 const ArticleSection = () => {
 
   const [categoryList, setCategoryList] = useState([{ id: "all", name: "All" }]);
   const [selectedCatId, setSelectedCatId] = useState("all");
+
   const [query, setQuery] = useState("");
   const [debouncedQ, setDebouncedQ] = useState("");
+  const [countdown, setCountdown] = useState(0);
+
   const [posts, setPosts] = useState([]);
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(true);
   const [isLoading, setIsLoading] = useState(false);
 
+  //ดึงมาทั้งหมด
   useEffect(() => {
     (async () => {
 
       const res = await api.get("/categories");
       const raw = Array.isArray(res.categories) ? res.categories : [];
 
-      const highlight = raw
-        .find(c => c.name.toLowerCase() === "highlight");
+      const highlight = raw.find(c => c.name.toLowerCase() === "highlight");
       const rest = raw
         .filter(c => c.name.toLowerCase() !== "highlight")
         .sort((a, b) => a.name.localeCompare(b.name));
@@ -47,57 +50,69 @@ const ArticleSection = () => {
     })();
   }, []);
 
+  //พิมพ์มารอ 2 วิ ค่อยค้นหา
   useEffect(() => {
-    const t = setTimeout(() => setDebouncedQ(query.trim()), 300);
+    const t = setTimeout(() => setDebouncedQ(query.trim()), 2000);
     return () => clearTimeout(t);
   }, [query]);
 
+  const isWaiting = query.trim() !== debouncedQ;
+
+  //ใช้นับถอยหลัง
   useEffect(() => {
-    if (selectedCatId == null) return;
+    if (!isWaiting) { setCountdown(0); return; }
+    setCountdown(2);
+    const t1 = setTimeout(() => setCountdown(1), 1000);
+    const t2 = setTimeout(() => setCountdown(0), 2000);
+    return () => { clearTimeout(t1); clearTimeout(t2); };
+  }, [isWaiting, query, debouncedQ]);
+
+  //ทำทีหลังเลยอันนี้
+  useEffect(() => {
     setPage(1);
     setPosts([]);
     setHasMore(true);
   }, [selectedCatId, debouncedQ]);
 
+  //กดหมวดหมู่ซ้ำได้ ไม่ให้ดึงใหม่
   const handleChangeCategory = (v) => {
     const next = v === "all" ? "all" : String(v);
-    console.log("handleChangeCategory =>", v, "->", next);
-    if (String(selectedCatId) === next) return;
+    if (String(selectedCatId) === next) return; //ถ้าเป็นอันเดิม ไม่ต้องดึงใหม่
     setSelectedCatId(next);
-    setPosts([]);
-    setPage(1);
-    setHasMore(true);
   };
 
-  const fetchPosts = async () => {
-    if (isLoading) return;
-    setIsLoading(true);
-    try {
-      const params = { page: String(page), limit: String(PAGE_SIZE) };
+  //ตัวดึงข้อมูลหลัก
+  useEffect(() => {
+    let cancelled = false;
 
-      if (selectedCatId !== "all") {
-        const cid = Number(selectedCatId);
-        if (!Number.isNaN(cid)) params.categoryId = cid;
+    const load = async () => {
+      setIsLoading(true);
+      try {
+        const params = { page: String(page), limit: String(PAGE_SIZE) };
+        if (selectedCatId !== "all") {
+          const cid = Number(selectedCatId);
+          if (!Number.isNaN(cid)) params.categoryId = cid;
+        }
+        if (debouncedQ) params.q = debouncedQ;
+
+        const res = await api.get("/posts", { params });
+        if (cancelled) return;
+
+        const list = Array.isArray(res.posts) ? res.posts : [];
+        setPosts(prev => (page === 1 ? list : [...prev, ...list]));
+        setHasMore((res.currentPage ?? page) < (res.totalPages ?? page));
+      } catch (e) {
+        if (!cancelled) {
+          console.error("fetch posts failed:", e?.response?.status, e?.response?.data || e?.message);
+        }
+      } finally {
+        if (!cancelled) setIsLoading(false);
       }
-      if (debouncedQ) params.q = debouncedQ;
-      if (query.trim()) params.q = query.trim();
+    };
 
-      console.log("GET /posts params =>", params, "selectedCatId =", selectedCatId);
-
-      const res = await api.get("/posts", { params });
-      const list = Array.isArray(res.posts) ? res.posts : [];
-      setPosts(prev => (page === 1 ? list : [...prev, ...list]));
-      setHasMore((res.currentPage ?? page) < (res.totalPages ?? page));
-
-    } catch (e) {
-      console.error("fetch posts failed:", e.response?.status, e.response?.data || e.message);
-
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  useEffect(() => { fetchPosts(); }, [page, selectedCatId, query]);
+    load();
+    return () => { cancelled = true; };
+  }, [page, selectedCatId, debouncedQ]);
 
   return (
     <>
@@ -129,7 +144,8 @@ const ArticleSection = () => {
             type="text"
             placeholder="Search"
             value={query}
-            onChange={(e) => { setQuery(e.target.value) }}
+            onChange={(e) => { setQuery(e.target.value); }}
+            onKeyDown={(e) => { if (e.key === "Enter") setDebouncedQ(query.trim()); }} //ทำให้กด Enter ได้
             className="w-full h-[48px] px-4 pr-10 rounded-md text-base border focus:outline-none"
           />
           <SearchIcon className="absolute right-3 top-1/2 w-4 h-4 transform -translate-y-1/2 text-[var(--color-text-articles)]" />
@@ -153,17 +169,21 @@ const ArticleSection = () => {
       </div>
 
       {/* Posts */}
-      {isLoading && posts?.length === 0 ? (
+      {(posts?.length ?? 0) === 0 ? (
         <div className="md:mx-auto max-w-[1200px] p-4">
           <div className={`rounded-xl border border-black/5 dark:border-white/10 bg-[var(--color-bg-articles-desktop)]/60 ${CARD_MIN_H} grid place-items-center`}>
-            <p className="text-sm text-[var(--color-text-articles)]/70">Loading...</p>
+            <p className="text-sm text-gray-500" aria-live="polite">
+              {isWaiting
+                ? `Searching in ${countdown}s…`          
+                : isLoading
+                  ? "Loading..."                       
+                  : "No articles found"}
+            </p>
           </div>
         </div>
-      ) : posts?.length > 0 ? (
+      ) : (
         <>
           <BlogCard posts={posts} />
-
-          {/* View more */}
           {hasMore && (
             <div className="text-center mt-8">
               <button
@@ -176,12 +196,6 @@ const ArticleSection = () => {
             </div>
           )}
         </>
-      ) : (
-        <div className="md:mx-auto max-w-[1200px] p-4">
-          <div className={`rounded-xl border border-black/5 dark:border-white/10 bg-[var(--color-bg-articles-desktop)]/60 ${CARD_MIN_H} grid place-items-center`}>
-            <p className="text-sm text-gray-500">No articles found</p>
-          </div>
-        </div>
       )}
     </>
   );
