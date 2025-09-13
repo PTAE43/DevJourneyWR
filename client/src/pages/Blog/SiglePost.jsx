@@ -6,6 +6,7 @@ import SkeletonPost from "@/components/Skeletons/SkeletonsPost";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { toast } from "sonner";
+import { LikeButton } from "@/components/Likes/LikeButton.jsx";
 
 export default function SiglePost() {
 
@@ -83,10 +84,8 @@ export default function SiglePost() {
                     {/*like / share / social*/}
                     <div className="grid items-center grid-cols-1 lg:grid-cols-3 rounded-xl border-2 px-4 py-4 mt-8 gap-3 text-sm bg-[var(--color-bg-like-share)]">
                         <div className="lg:col-span-1">
-                            <button className="flex items-center rounded-full border-2 px-8 py-2 bg-white hover:text-white hover:bg-[var(--color-button-like-hover)] gap-2">
-                                <img src="/images/posts/happy_light.png" width={24} height={24} className="rounded-full bg-white" />
-                                {post.likes_count}
-                            </button>
+                                <LikeButton postId={post.id} initialCount={post.likes_count ?? 0} />
+                                {/* {post.likes_count} */}
                         </div>
                         <div className="flex justify-end lg:col-span-2 gap-2">
                             <button

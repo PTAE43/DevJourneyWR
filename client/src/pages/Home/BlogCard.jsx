@@ -2,6 +2,7 @@
 import React from "react";
 import CardPost from "../../components/Card/cardPost"; // ถ้าเป็น named export ให้เปลี่ยนเป็น { CardPost }
 import { useNavigate } from "react-router-dom";
+// import { LikeButton } from "@/components/Likes/LikeButton";
 
 const CARD_MIN_H = "min-h-[300px] md:min-h-[320px]"; //เอาไว้มาปรับความสูง
 
@@ -20,6 +21,7 @@ export default function BlogCard({ posts = [] }) {
             className="cursor-pointer"
           >
             <CardPost data={p} />
+            {/* <LikeButton postId={p.id} initialCount={p.likes_count ?? 0} /> */}
           </div>
         ))}
       </div>

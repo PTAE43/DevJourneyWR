@@ -52,11 +52,12 @@ export const LikeButton = ({ postId, initialCount = 0, className = "" }) => {
                 disabled={liked}
                 onClick={toggle}
                 aria-pressed={liked}
-                className={`flex items-center gap-2 rounded-full border px-3 py-1 text-sm transition ${liked
+                className={`flex items-center gap-2 rounded-full border px-6 py-2 text-lg transition bg-white hover:text-white hover:bg-[var(--color-button-like-hover)]  ${liked
                     ? "bg-rose-50 border-rose-200 text-rose-600"
                     : "hover:bg-gray-50"}disabled:opacity-60 ${className}`}
             >
-                <Heart className={`w-4 h-4 ${liked ? "fill-current" : ""}`} />
+                {/* <img src="/images/posts/happy_light.png" width={24} height={24} className={`rounded-full bg-white ${liked ? "fill-current" : ""}`} /> */}
+                <Heart className={`w-6 h-6  ${liked ? "fill-current" : ""}`} />
                 <span>{count}</span>
             </button>
         </div>
