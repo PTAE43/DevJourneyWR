@@ -1,0 +1,23 @@
+# env files
+.env
+.env.*
+client/.env
+client/.env.*
+server/.env
+server/.env.*
+
+# node
+node_modules/
+client/node_modules/
+server/node_modules/
+
+# logs & misc
+*.log
+npm-debug.log*
+
+# build outputs
+dist/
+build/
+
+# vercel local state
+.vercel
