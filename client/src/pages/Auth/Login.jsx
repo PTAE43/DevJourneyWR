@@ -1,7 +1,6 @@
 import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
-// import { api } from "@/lib/api";
-import { supabase } from "../../lib/supabaseClient";
+import { supabase } from "../../lib/supabaseClient.js";
 
 function Login() {
 
@@ -15,13 +14,15 @@ function Login() {
         event.preventDefault();
         setError("");
         setLoading(true);
-        const { data, error } = await supabase.auth.signInWithPassword({ email, password });
-        setLoading(false)
-        if (error) {
-            setError(error.message || "Invalid email or password");
-            return;
+        try {
+            const { error } = await supabase.auth.signInWithPassword({ email, password });
+            if (error) throw error;
+            navigate("/");
+        } catch (error) {
+            setError(error.message || "Login failed.");
+        } finally {
+            setLoading(false);
         }
-        navigate("/");
     };
 
     return (
@@ -48,14 +49,14 @@ function Login() {
                         required
                     />
                 </div>
-                {error && <p className="text-sm text-red-600">{error}</p>}
+                {error && <p className="text-sm text-red-500">{error}</p>}
                 <button type="submit" disabled={loading}>
-                    {loading ? "loading.." : "Login"}
+                    {loading ? "loading.." : "Log in"}
                 </button>
 
                 <div>
                     <span>Don’t have any account?</span>
-                    <span><Link to="/register" className="underline">Sign up</Link></span>
+                    <span><Link to="/auth/register" className="underline">Sign up</Link></span>
                 </div>
             </form>
         </div>
