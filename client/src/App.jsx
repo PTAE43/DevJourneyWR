@@ -8,6 +8,7 @@ import Login from "./pages/Auth/Login";
 import Register from "./pages/Auth/Register";
 import { Toaster } from "@/components/ui/sonner";
 import "./App.css";
+import RequireAuth from "./components/RequireAuth/RequireAuth";
 
 export default function App() {
   return (
@@ -20,6 +21,7 @@ export default function App() {
             <Route path="/posts/:id" element={<><SiglePost /><Toaster /></>} />
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
+            {/* <Route path="/dashboard" element={<RequireAuth><Dashboard /></RequireAuth>} /> */}
           </Routes>
         </main>
         <Footer />

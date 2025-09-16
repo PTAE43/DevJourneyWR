@@ -6,8 +6,7 @@ export function applyCors(req, res) {
     const allowed =
         whitelist.length === 0 || (origin && whitelist.includes(origin));
 
-    res.setHeader("Access-Control-Allow-Origin",
-        allowed ? (origin || "*") : whitelist[0] || "*");
+    res.setHeader("Access-Control-Allow-Origin", allowed ? (origin || "*") : whitelist[0] || "*");
     res.setHeader("Vary", "Origin");
     res.setHeader("Access-Control-Allow-Methods", "GET,POST,PATCH,PUT,DELETE,OPTIONS");
     res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
