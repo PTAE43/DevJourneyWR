@@ -8,7 +8,10 @@ import Login from "./pages/Auth/Login";
 import Register from "./pages/Auth/Register";
 import { Toaster } from "@/components/ui/sonner";
 import "./App.css";
+import RegisterSuccess from "./pages/Auth/RegisterSuccess";
 import RequireAuth from "./components/RequireAuth/RequireAuth";
+import ProfilePage from "./pages/Auth/Profile";
+import ResetPassword from "./pages/Auth/ResetPassword";
 
 export default function App() {
   return (
@@ -18,10 +21,18 @@ export default function App() {
         <main className="flex-1">
           <Routes>
             <Route path="/" element={<><HeroSection /><ArticleSection /></>} />
-            <Route path="/posts/:id" element={<><SiglePost /><Toaster /></>} />
+            <Route path="/posts/:id" element={<SiglePost />} />
             <Route path="/login" element={<Login />} />
+
+            {/* ต้องล็อกอินก่อน */}
+            <Route element={<RequireAuth />}>
+              <Route path="/profile" element={<ProfilePage />} />
+              <Route path="/profile/reset" element={<ResetPassword />} />
+            </Route>
+
+            {/* สมัครสมาชิก */}
             <Route path="/register" element={<Register />} />
-            {/* <Route path="/dashboard" element={<RequireAuth><Dashboard /></RequireAuth>} /> */}
+            <Route path="/success" element={<RegisterSuccess />} />
           </Routes>
         </main>
         <Footer />

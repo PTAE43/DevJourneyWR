@@ -11,7 +11,7 @@ const NavBar = () => {
             <div className="flex justify-between items-center md:mx-auto max-w-[1200px]">
                 {/* Logo */}
                 <div>
-                    <img src={hhLogo} alt="Logo" className="w-[24px] md:w-[44px] h-auto" />
+                    <Link to="/"><img src={hhLogo} alt="Logo" className="w-[24px] md:w-[44px] h-auto" /></Link>
                 </div>
 
                 {/* Toggle Button */}

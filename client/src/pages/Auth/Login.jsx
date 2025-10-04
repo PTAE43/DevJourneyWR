@@ -1,67 +1,107 @@
 import { useState } from "react";
-import { useNavigate, Link } from "react-router-dom";
+import { useNavigate, Link, useLocation } from "react-router-dom";
 import { supabase } from "../../lib/supabaseClient.js";
+import TextField from "@/components/ui/TextField.jsx";
+import PasswordField from "@/components/ui/PasswordField.jsx";
+import { validateEmail, friendlyAuthError } from "@/lib/validators.js";
+import { useToaster, Message } from "rsuite";
 
-function Login() {
+export default function Login() {
 
-    const [email, setEmail] = useState("");
-    const [password, setPassword] = useState("");
     const [loading, setLoading] = useState(false);
-    const [error, setError] = useState("");
-    const navigate = useNavigate();
+    const [errors, setErrors] = useState({});
+    const [form, setForm] = useState({ email: "", password: "" });
 
-    const haddleOnSubmit = async (event) => {
-        event.preventDefault();
-        setError("");
+    const navigate = useNavigate();
+    const location = useLocation();
+    const toaster = useToaster();
+
+    const set = (k, v) => setForm(s => ({ ...s, [k]: v }));
+
+    function validateAll() {
+        const e = {};
+        if (!validateEmail(form.email)) e.email = "รูปแบบอีเมลไม่ถูกต้อง";
+        if (!form.password) e.password = "กรุณากรอกรหัสผ่าน";
+        setErrors(e);
+        return Object.keys(e).length === 0;
+    }
+
+    async function onSubmit(e) {
+        e.preventDefault();
+        if (!validateAll()) return;
+
         setLoading(true);
         try {
-            const { error } = await supabase.auth.signInWithPassword({ email, password });
+            const { error } = await supabase.auth.signInWithPassword({
+                email: form.email,
+                password: form.password,
+            });
             if (error) throw error;
-            navigate("/");
-        } catch (error) {
-            setError(error.message || "Login failed.");
+
+            toaster.push(
+                <Message type="success" closable>เข้าสู่ระบบสำเร็จ</Message>,
+                { placement: "bottomCenter" }
+            );
+
+            const to = location.state?.from?.pathname || "/profile";
+            navigate(to, { replace: true });
+
+        } catch (err) {
+            const msg = friendlyAuthError(err?.message);   //map ข้อความจาก supabase
+            toaster.push(
+                <Message type="error" closable>
+                    <div className="font-medium">
+                        {msg.title ?? "Your password is incorrect or this email doesn’t exist"}
+                    </div>
+                    <div className="text-sm opacity-80">
+                        {msg.detail ?? "Please try another password or email"}
+                    </div>
+                </Message>,
+                { placement: "bottomCenter", duration: 5000 }
+            );
+            setErrors({});
         } finally {
             setLoading(false);
         }
-    };
+    }
 
     return (
-        <div className="min-h-screen">
-            <h1>Log in</h1>
-            <form onSubmit={haddleOnSubmit} className="space-y-4">
-                <label>Email</label>
-                <div>
-                    <input
-                        type="email"
-                        className="w-full rounded-md border px-3 py-2"
-                        value={email}
-                        onChange={(e) => setEmail(e.target.value)}
-                        required
-                    />
-                </div>
-                <label>Password</label>
-                <div>
-                    <input
-                        type="password"
-                        className="w-full rounded-md border px-3 py-2"
-                        value={password}
-                        onChange={(e) => setPassword(e.target.value)}
-                        required
-                    />
-                </div>
-                {error && <p className="text-sm text-red-500">{error}</p>}
-                <button type="submit" disabled={loading}>
-                    {loading ? "loading.." : "Log in"}
-                </button>
+        <div className="min-h-screen grid place-items-center px-4">
+            <form onSubmit={onSubmit}
+                className="w-full max-w-[560px] rounded-2xl bg-[#F3F2EF] p-8 md:p-12 space-y-5">
+                <h1 className="text-3xl md:text-4xl font-semibold text-center mb-4">Log in</h1>
 
-                <div>
-                    <span>Don’t have any account?</span>
-                    <span><Link to="/auth/register" className="underline">Sign up</Link></span>
+                <TextField
+                    label="Email"
+                    type="email"
+                    placeholder="Email"
+                    value={form.email}
+                    onChange={v => set("email", v)}
+                    error={errors.email}
+                />
+
+                <PasswordField
+                    label="Password"
+                    placeholder="Password"
+                    value={form.password}
+                    onChange={v => set("password", v)}
+                    error={errors.password}
+                />
+
+                <div className="pt-2">
+                    <button
+                        type="submit"
+                        disabled={loading}
+                        className="mx-auto block rounded-full bg-[#171511] px-6 py-2 text-white hover:opacity-95 disabled:opacity-50"
+                    >
+                        {loading ? "Loading..." : "Log in"}
+                    </button>
                 </div>
+
+                <p className="text-center text-sm text-gray-500">
+                    Don’t have any account? <Link to="/register" className="underline">Sign up</Link>
+                </p>
             </form>
         </div>
-    )
-
+    );
 }
-
-export default Login;
