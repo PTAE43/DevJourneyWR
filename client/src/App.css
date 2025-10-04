@@ -7,6 +7,9 @@ body {
 }
 
 html, body, #root { height: 100%; }
+@layer base {
+  html { @apply overflow-y-scroll; }
+}
 
 :root {
   /*Homepage*/

@@ -3,16 +3,14 @@ import { CustomProvider } from 'rsuite';
 import App from './App.jsx';
 import React from 'react';
 import ReactDOM from 'react-dom/client';
+import { AuthProvider } from "@/contexts/AuthContext";
 
 ReactDOM.createRoot(document.getElementById('root')).render(
     <React.StrictMode>
-        <CustomProvider theme="light">
-            <App />
-        </CustomProvider>
+        <AuthProvider>
+            <CustomProvider theme="light">
+                <App />
+            </CustomProvider>
+        </AuthProvider>
     </React.StrictMode>
 );
-
-
-// import { useToaster, Message } from 'rsuite';
-// const toaster = useToaster();
-// toaster.push(<Message type="error" closable>ข้อความผิดพลาด</Message>, { placement: 'bottomCenter', duration: 4000 });

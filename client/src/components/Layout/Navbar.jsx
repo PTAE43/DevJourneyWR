@@ -1,54 +1,163 @@
-import hhLogo from "../../assets/image-header/hh.png";
-import menutoggle from "../../assets/image-header/menu-toggle.png";
-import React, { useState } from "react";
-import { Link } from "react-router-dom";
+import hhLogo from "@/assets/image-header/hh.png";
+import menutoggle from "@/assets/image-header/menu-toggle.png";
+import React, { useEffect, useRef, useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import { useAuth } from "@/contexts/AuthContext";
+import { api } from "@/lib/api";
+import UserMenu from "@/components/Menu/UserMenu";
+import { LogOut } from "lucide-react";
+import { supabase } from "@/lib/supabaseClient";
 
-const NavBar = () => {
+export default function NavBar() {
     const [isOpen, setIsOpen] = useState(false);
+    const { isAuthed, loading } = useAuth();
+    const [me, setMe] = useState(null);
+
+    const nav = useNavigate();
+    const menuRef = useRef(null); 
+    const toggleRef = useRef(null);
+
+    useEffect(() => {
+        let alive = true;
+        (async () => {
+            if (!isAuthed) { setMe(null); return; }
+            try {
+                const { data } = await api.get("/profile");
+                if (alive) setMe(data?.user || null);
+            } catch { if (alive) setMe(null); }
+        })();
+        return () => { alive = false; };
+    }, [isAuthed]);
+
+    // ปิดเมนูเมื่อคลิกนอก / แตะนอก / กด Esc
+    useEffect(() => {
+        function handleOutside(e) {
+            if (!isOpen) return;
+            const menu = menuRef.current;
+            const toggle = toggleRef.current;
+            if (!menu || !toggle) return;
+            const target = e.target;
+
+            const clickedInsideMenu = menu.contains(target);
+            const clickedToggle = toggle.contains(target);
+
+            if (!clickedInsideMenu && !clickedToggle) setIsOpen(false);
+        }
+        function onEsc(e) {
+            if (isOpen && e.key === "Escape") setIsOpen(false);
+        }
+        document.addEventListener("mousedown", handleOutside);
+        document.addEventListener("touchstart", handleOutside, { passive: true });
+        document.addEventListener("keydown", onEsc);
+        return () => {
+            document.removeEventListener("mousedown", handleOutside);
+            document.removeEventListener("touchstart", handleOutside);
+            document.removeEventListener("keydown", onEsc);
+        };
+    }, [isOpen]);
+
+    async function logout() {
+        await supabase.auth.signOut().catch(() => { });
+        setIsOpen(false);
+        nav("/", { replace: true });
+    }
 
     return (
-        <header>
-            <nav className="md:mx-auto bg-white shadow-md px-6 py-4 relative z-50">
-                <div className="flex justify-between items-center md:mx-auto max-w-[1200px]">
+        <header className="sticky top-0 z-50 bg-white shadow-md">
+            <nav className="mx-auto max-w-[1200px] px-6 md:py-4 mt-4 md:mt-0 h-[48px] md:h-[80px]">
+                <div className="flex justify-between items-center md:h-[48px]">
                     {/* Logo */}
-                    <div>
-                        <Link to="/"><img src={hhLogo} alt="Logo" className="w-[24px] md:w-[44px] h-auto" /></Link>
-                    </div>
+                    <Link to="/" className="shrink-0">
+                        <img src={hhLogo} alt="Logo" className="h-[28px] w-auto md:h-[30px]" />
+                    </Link>
 
-                    {/* Toggle Button */}
+                    {/* Mobile toggle */}
                     <button
-                        onClick={() => setIsOpen(!isOpen)}
-                        className="md:hidden text-2xl focus:outline-none z-50">
-                        <img src={menutoggle} alt="Menu" />
+                        ref={toggleRef}
+                        onClick={() => setIsOpen(o => !o)}
+                        className="md:hidden rounded-md p-2 hover:bg-black/5"
+                        aria-label="Toggle menu"
+                    >
+                        <img src={menutoggle} alt="Menu" width={25} height={25} />
                     </button>
 
-                    {/* Mobile Menu */}
-                    <ul
-                        className={`fixed top-12 left-0 w-full h-[200px] z-40 transition-all duration-300 ease-in-out
-                        bg-[var(--color-bg-menu-toggle-mb)] flex flex-col justify-center items-center gap-6 px-5
-                        ${isOpen ? "opacity-100 translate-x-0" : "opacity-0 -translate-x-full"}
-                        md:hidden`}>
-                        <li className="border border-[var(--color-border-login)] rounded-full bg-[var(--color-bg-login)] hover:text-blue-500 py-3 w-full">
-                            <Link to="/login" className="flex justify-center text-[var(--color-text-login)]">Log in</Link>
-                        </li>
-                        <li className="border border-[var(--color-border-Signup)] rounded-full bg-[var(--color-bg-Signup)] hover:text-blue-500 py-3 w-full">
-                            <Link to="/register" className="flex justify-center text-[var(--color-text-Signup)]">Sign up</Link>
-                        </li>
-                    </ul>
-
-                    {/* Desktop Menu */}
-                    <ul className="md:flex hidden gap-4">
-                        <li className="justify-center items-center border border-[var(--color-border-login)] rounded-full bg-[var(--color-bg-login)] hover:bg-gray-100 w-[127px] h-[48px] flex cursor-pointer">
-                            <Link to="/login" className="text-[var(--color-text-login)]">Log in</Link>
-                        </li>
-                        <li className="justify-center items-center border border-[var(--color-border-Signup)] rounded-full bg-[var(--color-bg-Signup)] hover:border-gray-700 hover:bg-gray-700 w-[127px] h-[48px] flex cursor-pointer">
-                            <Link to="/register" className="text-[var(--color-text-Signup)]">Sign up</Link>
-                        </li>
-                    </ul>
+                    {/* Desktop */}
+                    <div className="hidden md:flex items-center gap-4">
+                        {!loading && !isAuthed && (
+                            <>
+                                <Link
+                                    to="/login"
+                                    className="flex h-[48px] w-[127px] items-center justify-center rounded-full border border-[var(--color-border-login)] bg-[var(--color-bg-login)] hover:bg-gray-100 text-[var(--color-text-login)]"
+                                >
+                                    Log in
+                                </Link>
+                                <Link
+                                    to="/register"
+                                    className="flex h-[48px] w-[127px] items-center justify-center rounded-full border border-[var(--color-border-Signup)] bg-[var(--color-bg-Signup)] hover:border-gray-700 hover:bg-gray-700 text-[var(--color-text-Signup)]"
+                                >
+                                    Sign up
+                                </Link>
+                            </>
+                        )}
+                        {!loading && isAuthed && <UserMenu me={me} />}
+                    </div>
                 </div>
+
+                {/* Backdrop (mobile only) */}
+                {isOpen && <div className="fixed inset-0 z-40 md:hidden" onClick={() => setIsOpen(false)} />}
+
+                {/* Mobile menu */}
+                <ul
+                    ref={menuRef}
+                    className={`md:hidden fixed left-0 right-0 top-[72px] z-50 transition-all duration-300 ease-in-out ${isOpen ? "opacity-100 translate-y-0" : "pointer-events-none opacity-0 -translate-y-2"
+                        }`}
+                >
+                    <div className="mx-4 rounded-2xl bg-white p-3 drop-shadow-lg">
+                        {!loading && !isAuthed ? (
+                            <>
+                                <li className="mb-3">
+                                    <Link
+                                        to="/login"
+                                        onClick={() => setIsOpen(false)}
+                                        className="flex w-full justify-center rounded-full border border-[var(--color-border-login)] bg-[var(--color-bg-login)] py-3 text-[var(--color-text-login)]"
+                                    >
+                                        Log in
+                                    </Link>
+                                </li>
+                                <li>
+                                    <Link
+                                        to="/register"
+                                        onClick={() => setIsOpen(false)}
+                                        className="flex w-full justify-center rounded-full border border-[var(--color-border-Signup)] bg-[var(--color-bg-Signup)] py-3 text-[var(--color-text-Signup)]"
+                                    >
+                                        Sign up
+                                    </Link>
+                                </li>
+                            </>
+                        ) : (
+                            <div className="space-y-2">
+                                <Link to="/profile" onClick={() => setIsOpen(false)} className="block rounded-lg px-4 py-3 bg-[var(--color-bg-menu-toggle-mb)] shadow">
+                                    Profile
+                                </Link>
+                                <Link to="/profile/reset" onClick={() => setIsOpen(false)} className="block rounded-lg px-4 py-3 bg-[var(--color-bg-menu-toggle-mb)] shadow">
+                                    Reset password
+                                </Link>
+                                {me?.role === "admin" && (
+                                    <Link to="/admin" onClick={() => setIsOpen(false)} className="block rounded-lg px-4 py-3 bg-[var(--color-bg-menu-toggle-mb)] shadow">
+                                        Admin panel
+                                    </Link>
+                                )}
+                                <button
+                                    onClick={logout}
+                                    className="flex w-full items-center gap-2 rounded-lg px-4 py-3 bg-[var(--color-bg-menu-toggle-mb)] shadow"
+                                >
+                                    <LogOut className="h-4 w-4" /> Log out
+                                </button>
+                            </div>
+                        )}
+                    </div>
+                </ul>
             </nav>
         </header>
     );
-};
-
-export default NavBar;
+}
