@@ -8,7 +8,7 @@ export function applyCors(req, res) {
         'Access-Control-Allow-Headers',
         'Content-Type, Authorization, X-Requested-With'
     );
-    
+
     res.setHeader('Access-Control-Max-Age', '86400'); // cache preflight 1 วัน
 
     if (req.method === 'OPTIONS') {
