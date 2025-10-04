@@ -27,6 +27,6 @@ export default function RequireAuth() {
     }, []);
 
     if (loading) return null;
-    if (!authed) return <Navigate to="/auth/login" replace state={{ from: location }} />;
+    if (!authed) return <Navigate to="/login" replace state={{ from: location }} />;
     return <Outlet />;
 }

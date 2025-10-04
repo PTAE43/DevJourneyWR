@@ -61,7 +61,7 @@ export default function Register() {
 
 
     return (
-        <div className="min-h-screen grid place-items-center px-4">
+        <div className="grid place-items-center px-4">
             <form onSubmit={onSubmit}
                 className="w-full max-w-[640px] rounded-2xl bg-[#F3F2EF] p-8 md:p-12 space-y-5">
                 <h1 className="text-3xl md:text-4xl font-semibold text-center mb-4">Sign up</h1>
