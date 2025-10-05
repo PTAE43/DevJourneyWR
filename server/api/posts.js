@@ -1,6 +1,6 @@
-import { supabaseAdmin } from "../lib/supabaseAdmin.js";
-import { getUserFromAuthHeader } from "../lib/auth.js";
-import { applyCors } from "../lib/cors.js";
+import { supabaseAdmin } from "./lib/supabaseAdmin.js";
+import { getUserFromAuthHeader } from "./lib/auth.js";
+import { applyCors } from "./lib/cors.js";
 
 export default async function handler(req, res) {
     if (applyCors(req, res)) return;
@@ -10,44 +10,47 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: "Method Not Allowed" });
 }
 
-// GET /api/posts
+// GET /api/posts?page=1&limit=10&q=&categoryId=all
 async function getPosts(req, res) {
-
-    console.log("req.query:", req.query);
-
     try {
         const { page = "1", limit = "10", q = "", categoryId } = req.query;
 
         const currentPage = Math.max(parseInt(page, 10) || 1, 1);
-        const pageSize = Math.max(parseInt(limit, 10) || 10, 1);
+        const pageSize = Math.min(50, Math.max(parseInt(limit, 10) || 10, 1)); // กัน limit ให้อยู่ 1–50
         const from = (currentPage - 1) * pageSize;
         const to = from + pageSize - 1;
 
-        let query = supabaseAdmin.from("posts")
+        let query = supabaseAdmin
+            .from("posts")
             .select(`
-                id, title, description, images, created_at, category_id, published,
-                category:categories!posts_category_id_fkey ( id, name )
-            `, { count: "exact" })
+        id, title, description, images, created_at, category_id, published, likes_count,
+        category:categories!posts_category_id_fkey ( id, name )
+      `, { count: "exact" })
             .eq("published", true)
             .order("created_at", { ascending: false });
 
         if (categoryId && categoryId !== "all") {
-            query = query.eq("category_id", Number(categoryId));
+            const cid = Number(categoryId);
+            if (!Number.isNaN(cid)) query = query.eq("category_id", cid);
         }
-        if (q) {
-            query = query.ilike("title", `%${q}%`);
+        if (q && String(q).trim()) {
+            query = query.ilike("title", `%${String(q).trim()}%`);
         }
 
         const { data, error, count } = await query.range(from, to);
         if (error) throw error;
 
+        const total = count || 0;
+        const totalPages = Math.max(1, Math.ceil(total / pageSize));
+        const hasMore = from + (data?.length || 0) < total;
+
         res.status(200).json({
             posts: data ?? [],
             currentPage,
             pageSize,
-            total: count || 0,
-            totalPages: Math.ceil((count || 0) / pageSize),
-            hasMore: from + (data?.length || 0) < (count || 0),
+            total,
+            totalPages,
+            hasMore,
         });
     } catch (e) {
         console.error("GET /api/posts error:", e);
@@ -55,14 +58,15 @@ async function getPosts(req, res) {
     }
 }
 
-// POST /api/posts
+// POST /api/posts  (สำหรับ admin)
 async function createPost(req, res) {
     try {
         const user = await getUserFromAuthHeader(req);
         if (!user) return res.status(401).json({ error: "Unauthorized" });
 
-        const { data: urow } = await supabaseAdmin
+        const { data: urow, error: uerr } = await supabaseAdmin
             .from("users").select("role").eq("id", user.id).single();
+        if (uerr) throw uerr;
         if (urow?.role !== "admin") {
             return res.status(403).json({ error: "Forbidden" });
         }
@@ -84,7 +88,7 @@ async function createPost(req, res) {
             .single();
 
         if (error) throw error;
-        res.json({ post: data });
+        res.status(200).json({ post: data });
     } catch (error) {
         res.status(400).json({ error: error.message });
     }

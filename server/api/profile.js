@@ -1,6 +1,6 @@
-import { supabaseAdmin } from '../lib/supabaseAdmin.js';
-import { getUserFromAuthHeader } from '../lib/auth.js';
-import { applyCors } from '../lib/cors.js';
+import { supabaseAdmin } from "./lib/supabaseAdmin.js";
+import { getUserFromAuthHeader } from "./lib/auth.js";
+import { applyCors } from "./lib/cors.js";
 
 export default async function handler(req, res) {
     if (applyCors(req, res)) return;
@@ -47,7 +47,7 @@ async function upsertMe(req, res) {
         const username = (body.username || '').trim();
         const profile_pic = body.profile_pic || null;
 
-        const USERNAME_RE = /^[A-Za-z0-9._-]{5,25}$/;
+        const USERNAME_RE = /^[A-Za-z0-9._-]{3,24}$/;
         if (!USERNAME_RE.test(username)) {
             return res.status(400).json({ error: 'Invalid username format' });
         }

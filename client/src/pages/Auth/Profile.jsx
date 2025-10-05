@@ -4,17 +4,18 @@ import { uploadAvatar, removeAvatar } from "@/lib/avatars.js";
 import { useToaster, Message, Loader } from "rsuite";
 import { User } from "lucide-react";
 
-const USERNAME_RE = /^[A-Za-z0-9._-]{5,25}$/;
+// ให้ตรงกับฝั่ง server (3–24 ตัว, a–z, 0–9, . _ -)
+const USERNAME_RE = /^[A-Za-z0-9._-]{3,24}$/;
 
 export default function ProfilePage() {
-    const [me, setMe] = useState(null);                         // ข้อมูล users จาก supabase
+    const [me, setMe] = useState(null);
     const [form, setForm] = useState({ name: "", username: "" });
-    const [avatarUrl, setAvatarUrl] = useState("");             // preview url
-    const [loading, setLoading] = useState(false);              // สถานะระหว่าง save
+    const [avatarUrl, setAvatarUrl] = useState("");
+    const [loading, setLoading] = useState(false);
 
     const [originalAvatarUrl, setOriginalAvatarUrl] = useState("");
     const [originalAvatarPath, setOriginalAvatarPath] = useState("");
-    const [newAvatar, setNewAvatar] = useState(null);           // ข้อมูลไฟล์ใหม่ (รอ save)
+    const [newAvatar, setNewAvatar] = useState(null);
 
     const [touched, setTouched] = useState({ name: false, username: false });
 
@@ -23,21 +24,31 @@ export default function ProfilePage() {
     // โหลดโปรไฟล์ครั้งแรก
     useEffect(() => {
         (async () => {
-            const { data } = await api.get("/profile");
-            const u = data?.user || {};
-            setMe(u);
-            setForm({ name: u.name || "", username: u.username || "" });
-            setAvatarUrl(u.profile_pic || "");
-            setOriginalAvatarUrl(u.profile_pic || "");
-            setOriginalAvatarPath(storagePathFromUrl(u.profile_pic));
+            try {
+                // api.get() คืน JSON ตรง ๆ: { user: {...} }
+                const res = await api.get("/profile");
+                const u = res?.user || {};
+                setMe(u);
+                setForm({ name: u.name || "", username: u.username || "" });
+                setAvatarUrl(u.profile_pic || "");
+                setOriginalAvatarUrl(u.profile_pic || "");
+                setOriginalAvatarPath(storagePathFromUrl(u.profile_pic));
+            } catch (err) {
+                toaster.push(
+                    <Message type="error" closable>
+                        {String(err?.message || "Failed to load profile")}
+                    </Message>,
+                    { placement: "bottomCenter" }
+                );
+            }
         })();
     }, []);
 
-    // แปลง URL public >storage path (สำหรับลบไฟล์เก่า)
+    // แปลง URL public > storage path (สำหรับลบไฟล์เก่า)
     function storagePathFromUrl(url) {
         if (!url) return "";
-        const i = url.indexOf("/avatars/");
-        return i !== -1 ? url.slice(i + "/avatars/".length) : "";
+        const i = String(url).indexOf("/avatars/");
+        return i !== -1 ? String(url).slice(i + "/avatars/".length) : "";
     }
 
     // validate
@@ -49,7 +60,7 @@ export default function ProfilePage() {
     const usernameErr = useMemo(() => {
         if (!touched.username) return "";
         if (!form.username.trim()) return "Username is required";
-        if (!USERNAME_RE.test(form.username)) return "5–25 A-Z a-z 0-9 . _ -";
+        if (!USERNAME_RE.test(form.username)) return "3–24 A-Z a-z 0-9 . _ -";
         return "";
     }, [form.username, touched.username]);
 
@@ -58,7 +69,6 @@ export default function ProfilePage() {
         const file = e.target.files?.[0];
         if (!file || !me?.id) return;
 
-        // ขึ้น toast “Uploading…”
         const toastId = toaster.push(
             <Message type="info" closable>
                 <div className="flex items-center gap-2">
@@ -73,7 +83,12 @@ export default function ProfilePage() {
             setAvatarUrl(up.publicUrl);
             setNewAvatar(up);
         } catch (err) {
-            toaster.push(<Message type="error" closable>{err.message}</Message>, { placement: "bottomCenter" });
+            toaster.push(
+                <Message type="error" closable>
+                    {String(err?.message || "Upload failed")}
+                </Message>,
+                { placement: "bottomCenter" }
+            );
         } finally {
             toaster.remove(toastId);
         }
@@ -91,17 +106,23 @@ export default function ProfilePage() {
     // บันทึกโปรไฟล์
     async function onSave() {
         if (nameErr || usernameErr) {
-            toaster.push(<Message type="warning">กรุณากรอกข้อมูลให้ถูกต้อง</Message>, { placement: "bottomCenter" });
+            toaster.push(
+                <Message type="warning">กรุณากรอกข้อมูลให้ถูกต้อง</Message>,
+                { placement: "bottomCenter" }
+            );
             return;
         }
         setLoading(true);
         try {
             const nextAvatarUrl = newAvatar?.publicUrl || originalAvatarUrl;
 
+            // ต้องส่งใน key "body"
             await api.put("/profile", {
-                name: form.name.trim(),
-                username: form.username.trim(),
-                profile_pic: nextAvatarUrl || null,
+                body: {
+                    name: form.name.trim(),
+                    username: form.username.trim(),
+                    profile_pic: nextAvatarUrl || null,
+                },
             });
 
             // ถ้ามีรูปใหม่ > ค่อยลบไฟล์เก่า
@@ -122,14 +143,19 @@ export default function ProfilePage() {
 
             toaster.push(
                 <Message type="success" closable>
-                    Saved profile<br />
+                    Saved profile
+                    <br />
                     <span>Your profile has been successfully updated</span>
                 </Message>,
                 { placement: "bottomCenter" }
             );
         } catch (err) {
-            const msg = err?.response?.data?.error || err.message;
-            toaster.push(<Message type="error" closable>{msg}</Message>, { placement: "bottomCenter" });
+            toaster.push(
+                <Message type="error" closable>
+                    {String(err?.message || "Save failed")}
+                </Message>,
+                { placement: "bottomCenter" }
+            );
         } finally {
             setLoading(false);
         }
