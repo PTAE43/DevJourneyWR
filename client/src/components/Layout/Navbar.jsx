@@ -14,7 +14,7 @@ export default function NavBar() {
     const [me, setMe] = useState(null);
 
     const nav = useNavigate();
-    const menuRef = useRef(null); 
+    const menuRef = useRef(null);
     const toggleRef = useRef(null);
 
     useEffect(() => {
@@ -22,8 +22,8 @@ export default function NavBar() {
         (async () => {
             if (!isAuthed) { setMe(null); return; }
             try {
-                const { data } = await api.get("/profile");
-                if (alive) setMe(data?.user || null);
+                const r = await api.get("/profile");
+                if (alive) setMe(r?.user || null);
             } catch { if (alive) setMe(null); }
         })();
         return () => { alive = false; };

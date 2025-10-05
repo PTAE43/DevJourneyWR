@@ -18,6 +18,7 @@ const PAGE_SIZE = 4;
 const CARD_MIN_H = "min-h-[700px] md:min-h-[720px]";
 
 const ArticleSection = () => {
+  const [booted, setBooted] = useState(false);   // บูตเสร็จค่อยโหลดโพสต์
 
   const [categoryList, setCategoryList] = useState([{ id: "all", name: "All" }]);
   const [selectedCatId, setSelectedCatId] = useState("all");
@@ -35,8 +36,8 @@ const ArticleSection = () => {
   useEffect(() => {
     (async () => {
 
-      const res = await api.get("/categories");
-      const raw = Array.isArray(res.categories) ? res.categories : [];
+      const catRes = await api.get("/categories");
+      const raw = Array.isArray(catRes?.categories) ? catRes.categories : [];
 
       const highlight = raw.find(c => c.name.toLowerCase() === "highlight");
       const rest = raw
@@ -46,6 +47,7 @@ const ArticleSection = () => {
       setCategoryList([{ id: "all", name: "All" }, ...rest, ...(highlight ? [highlight] : [])]); //[...(highlight ? [highlight] : []), ...rest, { id: "all", name: "All" }]
       setSelectedCatId("all"); //highlight ? String(highlight.id) : "all"
       setPosts([]); setPage(1); setHasMore(true);
+      setBooted(true);
 
     })();
   }, []);
@@ -55,6 +57,9 @@ const ArticleSection = () => {
     const t = setTimeout(() => setDebouncedQ(query.trim()), 2000);
     return () => clearTimeout(t);
   }, [query]);
+
+  //ไม่รอ 2 วิในครั้งแรก
+  useEffect(() => { setDebouncedQ(""); }, []);
 
   const isWaiting = query.trim() !== debouncedQ;
 
@@ -69,10 +74,11 @@ const ArticleSection = () => {
 
   //ทำทีหลังเลยอันนี้
   useEffect(() => {
+    if (!booted) return;
     setPage(1);
     setPosts([]);
     setHasMore(true);
-  }, [selectedCatId, debouncedQ]);
+  }, [selectedCatId, debouncedQ, booted]);
 
   //กดหมวดหมู่ซ้ำได้ ไม่ให้ดึงใหม่
   const handleChangeCategory = (v) => {
@@ -84,6 +90,7 @@ const ArticleSection = () => {
   //ตัวดึงข้อมูลหลัก
   useEffect(() => {
     let cancelled = false;
+    const controller = new AbortController();
 
     const load = async () => {
       setIsLoading(true);
@@ -95,14 +102,15 @@ const ArticleSection = () => {
         }
         if (debouncedQ) params.q = debouncedQ;
 
-        const res = await api.get("/posts", { params });
-        if (cancelled) return;
+        const res = await api.get("/posts", { params, signal: controller.signal });
 
-        const list = Array.isArray(res.posts) ? res.posts : [];
+        if (cancelled) return;
+        const list = Array.isArray(res?.posts) ? res.posts : [];
         setPosts(prev => (page === 1 ? list : [...prev, ...list]));
         setHasMore((res.currentPage ?? page) < (res.totalPages ?? page));
+
       } catch (e) {
-        if (!cancelled) {
+        if (!cancelled && e.name !== "CanceledError") {
           console.error("fetch posts failed:", e?.response?.status, e?.response?.data || e?.message);
         }
       } finally {
@@ -110,9 +118,9 @@ const ArticleSection = () => {
       }
     };
 
-    load();
-    return () => { cancelled = true; };
-  }, [page, selectedCatId, debouncedQ]);
+    if (booted) load();
+    return () => { cancelled = true; controller.abort(); };
+  }, [page, selectedCatId, debouncedQ, booted]);
 
   return (
     <>
@@ -169,34 +177,33 @@ const ArticleSection = () => {
       </div>
 
       {/* Posts */}
-      {(posts?.length ?? 0) === 0 ? (
-        <div className="md:mx-auto max-w-[1200px] p-4">
-          <div className={`rounded-xl border border-black/5 dark:border-white/10 bg-[var(--color-bg-articles-desktop)]/60 ${CARD_MIN_H} grid place-items-center`}>
-            <p className="text-sm text-gray-500" aria-live="polite">
-              {isWaiting
-                ? `Searching in ${countdown}s…`          
-                : isLoading
-                  ? "Loading..."                       
-                  : "No articles found"}
-            </p>
-          </div>
-        </div>
-      ) : (
-        <>
-          <BlogCard posts={posts} />
-          {hasMore && (
-            <div className="text-center mt-8">
-              <button
-                onClick={() => !isLoading && hasMore && setPage(p => p + 1)}
-                disabled={isLoading}
-                className="hover:text-muted-foreground font-medium underline disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                {isLoading ? "Loading..." : "View more"}
-              </button>
+      <div className={`flex flex-col justify-center items-center ${CARD_MIN_H}`}>
+        {(booted && !isLoading && (posts?.length ?? 0) === 0) ? (
+          <div className="md:mx-auto max-w-[1200px] p-4">
+            <div className={`rounded-xl border border-black/5 dark:border-white/10 bg-[var(--color-bg-articles-desktop)]/60 ${CARD_MIN_H} grid place-items-center`}>
+              <p className="text-sm text-gray-500" aria-live="polite">
+                {isWaiting ? `Searching in ${countdown}s…` : "No articles found"}
+              </p>
             </div>
-          )}
-        </>
-      )}
+          </div>
+        ) : (
+          <>
+            <BlogCard posts={posts} />
+            {booted && hasMore && (
+              <div className="text-center mt-8">
+                <button
+                  onClick={() => !isLoading && hasMore && setPage(p => p + 1)}
+                  disabled={isLoading}
+                  className="hover:text-muted-foreground font-medium underline disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {isLoading ? "Loading..." : "View more"}
+                </button>
+              </div>
+            )}
+          </>
+        )}
+      </div>
+
     </>
   );
 };

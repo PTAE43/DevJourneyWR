@@ -18,10 +18,10 @@ export default function ProfileLayout() {
     useEffect(() => {
         (async () => {
             try {
-                const { data } = await api.get("/profile");
-                setMe(data?.user || null);
+                const r = await api.get("/profile");
+                setMe(r?.user || null);
             } catch {
-                navigate("login", { replace: true });
+                navigate("/login", { replace: true });
             } finally {
                 setLoading(false);
             }
@@ -34,7 +34,7 @@ export default function ProfileLayout() {
     );
 
     async function onLogout() {
-        await supabase.auth.signOut();
+        await supabase.auth.signOut().catch(() => { });
         navigate("/login", { replace: true });
     }
 
@@ -48,6 +48,11 @@ export default function ProfileLayout() {
                                 src={me.profile_pic}
                                 alt="avatar"
                                 className="h-12 w-12 rounded-full object-cover ring-1 ring-black/10"
+                                onError={(e) => {
+                                    e.currentTarget.src = "/images/profile/default-avatar.png";
+                                }}
+                                loading="lazy"
+                                referrerPolicy="no-referrer"
                             />
                         ) : (
                             <div className="grid h-12 w-12 place-items-center rounded-full bg-neutral-200 ring-1 ring-black/10">
@@ -63,8 +68,6 @@ export default function ProfileLayout() {
                             <div className="text-xl font-semibold">{activeLabel}</div>
                         </div>
                     </div>
-
-
                 </div>
 
                 <div className="md:flex md:gap-8">
@@ -75,9 +78,7 @@ export default function ProfileLayout() {
                                     end
                                     to="."
                                     className={({ isActive }) =>
-                                        `flex items-center gap-3 rounded-lg px-3 py-2 transition ${isActive
-                                            ? "bg-white text-black shadow"
-                                            : "text-gray-700 hover:bg-white/70"
+                                        `flex items-center gap-3 rounded-lg px-3 py-2 transition ${isActive ? "bg-white text-black shadow" : "text-gray-700 hover:bg-white/70"
                                         }`
                                     }
                                 >
@@ -88,15 +89,14 @@ export default function ProfileLayout() {
                                 <NavLink
                                     to="reset"
                                     className={({ isActive }) =>
-                                        `flex items-center gap-3 rounded-lg px-3 py-2 transition ${isActive
-                                            ? "bg-white text-black shadow"
-                                            : "text-gray-700 hover:bg-white/70"
+                                        `flex items-center gap-3 rounded-lg px-3 py-2 transition ${isActive ? "bg-white text-black shadow" : "text-gray-700 hover:bg-white/70"
                                         }`
                                     }
                                 >
                                     <Key className="h-4 w-4" />
                                     <span>Reset password</span>
                                 </NavLink>
+
                                 <button
                                     onClick={onLogout}
                                     className="flex items-center w-full gap-3 rounded-lg px-3 py-2 transition hover:bg-white/70"
@@ -110,8 +110,7 @@ export default function ProfileLayout() {
 
                     <section
                         key={location.pathname}
-                        className="flex-1 opacity-0 translate-y-2 transition-all duration-200
-                       data-[ready=true]:opacity-100 data-[ready=true]:translate-y-0"
+                        className="flex-1 opacity-0 translate-y-2 transition-all duration-200 data-[ready=true]:opacity-100 data-[ready=true]:translate-y-0"
                         data-ready={!loading}
                     >
                         {loading ? (

@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useCallback } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { Bell, ChevronDown, LogOut, KeyRound, User as UserIcon, LayoutDashboard } from "lucide-react";
 import { supabase } from "@/lib/supabaseClient";
@@ -11,16 +11,21 @@ export default function UserMenu({ me }) {
     const loc = useLocation();
     const popRef = useRef(null);
 
-    async function logout() {
-        await supabase.auth.signOut().catch(() => { });
-        setOpen(false);
-        nav("/", { replace: true });
-    }
+    const logout = useCallback(async () => {
+        try {
+            await supabase.auth.signOut();
+        } catch {
+            /* ignore */
+        } finally {
+            setOpen(false);
+            nav("/", { replace: true });
+        }
+    }, [nav]);
 
     // ปิดเมื่อเปลี่ยนเส้นทาง
     useEffect(() => setOpen(false), [loc.pathname]);
 
-    // คลิกข้างนอกเพื่อปิด
+    // คลิกข้างนอกเพื่อปิด & ปุ่ม Esc
     useEffect(() => {
         function onClick(e) {
             if (!popRef.current) return;
@@ -39,9 +44,12 @@ export default function UserMenu({ me }) {
 
     if (!isAuthed) return null;
 
+    const displayName = me?.name || me?.email || "User";
+    const avatarSrc = me?.profile_pic || "/images/profile/default-avatar.png";
+
     return (
         <div className="flex items-center gap-3 relative" ref={popRef}>
-            <button className="relative rounded-full p-1 hover:bg-black/5" aria-label="Notifications">
+            <button className="relative rounded-full p-1 hover:bg-black/5" aria-label="Notifications" type="button">
                 <Bell className="h-5 w-5" />
                 {/* badge mock */}
                 <span className="absolute -right-0.5 -top-0.5 h-2 w-2 rounded-full bg-red-500" />
@@ -52,13 +60,19 @@ export default function UserMenu({ me }) {
                 className="flex items-center gap-2 rounded-full px-2 py-1 hover:bg-black/5"
                 aria-haspopup="menu"
                 aria-expanded={open}
+                type="button"
             >
                 <img
-                    src={me?.profile_pic || "/images/profile/default-avatar.png"}
+                    key={avatarSrc} 
+                    src={avatarSrc}
+                    onError={(e) => { e.currentTarget.src = "/images/profile/default-avatar.png"; }}
                     className="h-8 w-8 rounded-full object-cover"
                     alt="avatar"
+                    loading="lazy"
+                    referrerPolicy="no-referrer"
+                    crossOrigin="anonymous"
                 />
-                <span className="hidden sm:inline max-w-[160px] truncate">{me?.name || me?.email}</span>
+                <span className="hidden sm:inline max-w-[160px] truncate">{displayName}</span>
                 <ChevronDown className="h-4 w-4" />
             </button>
 
@@ -78,7 +92,12 @@ export default function UserMenu({ me }) {
                             <LayoutDashboard className="h-4 w-4" /> Admin panel
                         </Link>
                     )}
-                    <button onClick={logout} role="menuitem" className="flex w-full items-center gap-2 px-4 py-2 hover:bg-neutral-50">
+                    <button
+                        onClick={logout}
+                        role="menuitem"
+                        className="flex w-full items-center gap-2 px-4 py-2 hover:bg-neutral-50"
+                        type="button"
+                    >
                         <LogOut className="h-4 w-4" /> Log out
                     </button>
                 </div>
