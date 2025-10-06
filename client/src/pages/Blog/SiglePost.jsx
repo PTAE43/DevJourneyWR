@@ -1,4 +1,3 @@
-// client/src/pages/Blog/SiglePost.jsx
 import { useEffect, useMemo, useState } from "react";
 import { useParams, Link } from "react-router-dom";
 import { supabase } from "@/lib/supabaseClient.js";
@@ -8,11 +7,13 @@ import remarkGfm from "remark-gfm";
 import { useToaster, Message } from "rsuite";
 import { useAuth } from "@/contexts/AuthContext";
 import LikeButton from "@/components/Likes/LikeButton";
+import { api } from "@/lib/api";
+import { formatBKK24 } from "@/lib/datetime";
 
 export default function SiglePost() {
 
     const toaster = useToaster();
-    const { user } = useAuth(); // ใช้เช็คเจ้าของคอมเมนต์ + บังคับล็อกอินตอนส่ง
+    const { user } = useAuth();
 
     const [post, setPost] = useState(null);
     const [loading, setLoading] = useState(true);
@@ -23,6 +24,7 @@ export default function SiglePost() {
     const [sending, setSending] = useState(false);
     const [comments, setComments] = useState([]);
     const [loadingComments, setLoadingComments] = useState(false);
+    const [filter, setFilter] = useState("new");
 
     const { slugOrId } = useParams();
 
@@ -63,27 +65,19 @@ export default function SiglePost() {
         if (!postId) return;
         setLoadingComments(true);
         try {
-            const { data, error } = await supabase
-                .from("comments")
-                .select(`
-                    id, post_id, user_id, content, created_at,
-                    author:users!comments_user_id_fkey ( id, name, profile_pic )
-                `)
-                .eq("post_id", postId)
-                .order("created_at", { ascending: false });
-
-            if (error) throw error;
-            const list =
-                (data || []).map((c) => ({
+            const { comments } = await api.get("/comments", {
+                params: { postId, order: filter },  // new|old|mine
+            });
+            setComments(
+                (comments || []).map(c => ({
                     id: c.id,
                     user_id: c.user_id,
                     content: c.content,
                     created_at: c.created_at,
                     author_name: c.author?.name || "Anonymous",
                     author_avatar: c.author?.profile_pic || "/images/profile/default-avatar.png",
-                })) || [];
-
-            setComments(list);
+                }))
+            );
         } catch (e) {
             toaster.push(
                 <Message type="error" closable>
@@ -97,10 +91,13 @@ export default function SiglePost() {
     }
 
     useEffect(() => {
-        if (post?.id) fetchComments(post.id);
-    }, [post?.id]);
+        if (post?.id) {
+            console.log("fetch comments ->", { postId: post.id, filter });
+            fetchComments(post.id);
+        }
+    }, [post?.id, filter]);
 
-    // Send comment
+    // Send
     async function handleSend() {
         const text = draft.trim();
         if (!text) return;
@@ -124,28 +121,16 @@ export default function SiglePost() {
 
         setSending(true);
         try {
-            const payload = { post_id: post.id, content: text };
-            const { data, error } = await supabase
-                .from("comments")
-                .insert(payload)
-                .select(`
-                    id, post_id, user_id, content, created_at,
-                    author:users!comments_user_id_fkey ( id, name, profile_pic )
-                `)
-                .single();
-
-            if (error) throw error;
-
+            const { comment } = await api.post("/comments", {
+                body: { postId: post.id, content: text },
+            });
             const newItem = {
-                id: data.id,
-                user_id: data.user_id,
-                content: data.content,
-                created_at: data.created_at,
-                author_name: data.author?.name || user?.email || "You",
-                author_avatar:
-                    data.author?.profile_pic ||
-                    user?.user_metadata?.avatar_url ||
-                    "/images/profile/default-avatar.png",
+                id: comment.id,
+                user_id: comment.user_id,
+                content: comment.content,
+                created_at: comment.created_at,
+                author_name: comment.author?.name || user?.email || "You",
+                author_avatar: comment.author?.profile_pic || user?.user_metadata?.avatar_url || "/images/profile/default-avatar.png",
             };
 
             setComments((prev) => [newItem, ...prev]);
@@ -165,8 +150,7 @@ export default function SiglePost() {
     // Delete comment (owner only by RLS)
     async function handleDelete(id) {
         try {
-            const { error } = await supabase.from("comments").delete().eq("id", id);
-            if (error) throw error;
+            await api.delete("/comments", { params: { id } });
             setComments((prev) => prev.filter((c) => c.id !== id));
         } catch (e) {
             toaster.push(
@@ -306,16 +290,31 @@ export default function SiglePost() {
 
                     {/* Comments list */}
                     <div className="mt-6 space-y-6">
-                        {loadingComments && (
-                            <div className="text-sm text-gray-500">Loading comments…</div>
-                        )}
 
-                        {!loadingComments && comments.length === 0 && (
-                            <div className="text-sm text-gray-500">Be the first to comment.</div>
-                        )}
+                        {/* Filter bar */}
+                        <div className="flex items-center gap-2 text-sm">
+                            <div>
+                                {["new", "old", "mine"].map(k => (
+                                    <button
+                                        key={k}
+                                        onClick={() => setFilter(k)}
+                                        className={`rounded-full border px-3 py-1 ${filter === k ? "bg-black text-white" : "bg-white hover:bg-neutral-100"}`}
+                                    >
+                                        {k === "new" ? "Latest" : k === "old" ? "Oldest" : "Mine"}
+                                    </button>
+                                ))}
+                            </div>
+                            {loadingComments && (<div className="text-sm text-gray-500">Loading…</div>)}
+                        </div>
+
+
+                        {!loadingComments && comments.length === 0 && (<div className="text-sm text-gray-500">Be the first to comment.</div>)}
 
                         {comments.map((c) => (
-                            <div key={c.id} className="border-b-2 pb-4">
+                            <div
+                                key={c.id}
+                                className={`border-b-2 p-4 px-4 ${c.user_id === user?.id ? "bg-[#fafafa] rounded-lg px-2" : ""}`}
+                            >
                                 <div className="flex items-center font-semibold gap-3">
                                     <img
                                         src={c.author_avatar}
@@ -325,14 +324,14 @@ export default function SiglePost() {
                                     <div className="flex-1">
                                         <div className="text-lg">{c.author_name}</div>
                                         <span className="text-xs text-gray-400">
-                                            {new Date(c.created_at).toLocaleString()}
+                                            {formatBKK24(c.created_at)}
                                         </span>
                                     </div>
 
                                     {c.user_id === user?.id && (
                                         <button
                                             onClick={() => handleDelete(c.id)}
-                                            className="text-xs rounded-full border px-3 py-1 hover:bg-gray-50"
+                                            className="text-xs rounded-full border px-5 py-2 hover:bg-red-600 hover:text-white"
                                             title="Delete comment"
                                         >
                                             Delete
