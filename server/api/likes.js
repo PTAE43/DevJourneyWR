@@ -15,7 +15,7 @@ export default async function handler(req, res) {
     }
 }
 
-// GET /api/likes?postId=1
+// GET
 async function getStatus(req, res) {
     const postId = Number(req.query.postId);
     if (!postId) return res.status(400).json({ error: "postId required" });
@@ -38,7 +38,7 @@ async function getStatus(req, res) {
     return res.status(200).json({ count: count ?? 0, liked });
 }
 
-// POST /api/likes   body: { postId }
+// POST
 async function like(req, res) {
     const user = await getUserFromAuthHeader(req);
     if (!user) return res.status(401).json({ error: "Unauthorized" });
@@ -59,7 +59,7 @@ async function like(req, res) {
     return res.status(200).json({ liked: true, count: count ?? 0 });
 }
 
-// DELETE /api/likes?postId=1
+// DELETE
 async function unlike(req, res) {
     const user = await getUserFromAuthHeader(req);
     if (!user) return res.status(401).json({ error: "Unauthorized" });

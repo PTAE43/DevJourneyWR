@@ -16,14 +16,18 @@ export default async function handler(req, res) {
     }
 }
 
-// GET
+// GET  /api/comments?postId=1&order=new|old|mine&page=1&limit=5
 async function getComments(req, res) {
     const postId = Number(req.query.postId);
     const order = String(req.query.order || "new"); // new | old | mine
+    const pageNum = Math.max(1, parseInt(req.query.page ?? "1", 10) || 1);
+    const pageSize = Math.min(50, Math.max(1, parseInt(req.query.limit ?? "5", 10) || 5));
+    const from = (pageNum - 1) * pageSize;
+    const to = from + pageSize - 1;
 
     if (!postId) return res.status(400).json({ error: "postId required" });
 
-    // mine
+    // ถ้าเป็น mine ต้องมี user
     let user = null;
     if (order === "mine") {
         user = await getUserFromAuthHeader(req);
@@ -40,15 +44,29 @@ async function getComments(req, res) {
             created_at,
             author:users!comments_user_id_fkey ( id, name, profile_pic )
         `, { count: "exact" })
-        .eq("post_id", postId)
-        .order("created_at", { ascending: order === "old" });
+        .eq("post_id", postId);
 
-    if (order === "mine") q = q.eq("user_id", user.id);
+    if (order === "mine") {
+        q = q.eq("user_id", user.id).order("created_at", { ascending: false });
+    } else if (order === "old") {
+        q = q.order("created_at", { ascending: true });
+    } else {
+        // new (default)
+        q = q.order("created_at", { ascending: false });
+    }
 
-    const { data, error } = await q;
+    const { data, error, count } = await q.range(from, to);
     if (error) throw error;
 
-    return res.status(200).json({ comments: data ?? [] });
+    const total = count ?? 0;
+    const totalPages = Math.max(1, Math.ceil(total / pageSize));
+
+    return res.status(200).json({
+        comments: data ?? [],
+        currentPage: pageNum,
+        totalPages,
+        total,
+    });
 }
 
 // POST
@@ -72,7 +90,7 @@ async function createComment(req, res) {
         .from("comments")
         .insert({ post_id: postId, user_id: user.id, comment_text: content })
         .select(`
-            id, post_id, user_id, content:comment_text, created_at, 
+            id, post_id, user_id, content:comment_text, created_at,
             author:users!comments_user_id_fkey ( id, name, profile_pic )
         `)
         .single();
@@ -89,12 +107,11 @@ async function deleteComment(req, res) {
     const id = Number(req.query.id);
     if (!id) return res.status(400).json({ error: "id required" });
 
-    // ป้องกันลบของคนอื่น
     const { error } = await supabaseAdmin
         .from("comments")
         .delete()
         .eq("id", id)
-        .eq("user_id", user.id);
+        .eq("user_id", user.id); // กันลบของคนอื่น
 
     if (error) throw error;
     return res.status(200).json({ ok: true });

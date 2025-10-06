@@ -8,7 +8,7 @@ function CardPost({ data }) {
                     src={data.images} alt={data.title} />
             </a>
             <div className="flex flex-col">
-                <div className="flex">
+                <div className="flex mb-2">
                     <span className="category_posts">
                         {data.category.name}
                     </span>
