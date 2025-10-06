@@ -137,8 +137,8 @@ const ArticleSection = () => {
               onClick={() => handleChangeCategory(c.id)}
               className={`w-[113px] h-[48px] px-4 py-2 rounded-md text-sm font-medium transition-all
                 ${String(selectedCatId) === String(c.id)
-                  ? "bg-[var(--color-bg-selected)] text-[var(--color-text-selected)]"
-                  : "text-[var(--color-text-articles)] hover:bg-gray-100"
+                  ? "bg-[var(--color-bg-selected)]  text-[var(--color-text-selected)]"
+                  : "text-[var(--color-text-articles)] hover:bg-[var(--color-text-articles-hover)] transition-all"
                 }`}
             >
               {c.name}
@@ -177,33 +177,52 @@ const ArticleSection = () => {
       </div>
 
       {/* Posts */}
-      <div className={`flex flex-col justify-center items-center ${CARD_MIN_H}`}>
-        {(booted && !isLoading && (posts?.length ?? 0) === 0) ? (
-          <div className="md:mx-auto max-w-[1200px] p-4">
-            <div className={`rounded-xl border border-black/5 dark:border-white/10 bg-[var(--color-bg-articles-desktop)]/60 ${CARD_MIN_H} grid place-items-center`}>
-              <p className="text-sm text-gray-500" aria-live="polite">
-                {isWaiting ? `Searching in ${countdown}s…` : "No articles found"}
-              </p>
+      <div className={`flex flex-col items-center ${CARD_MIN_H} mb-5`}>
+        {(isLoading && (posts?.length ?? 0) === 0) ? (
+          <div className="w-full max-w-[1200px] mx-auto">
+            <div
+              className={`rounded-xl border border-black/5 dark:border-white/10
+                    bg-[var(--color-bg-articles-desktop)]/60 ${CARD_MIN_H}
+                    flex items-center justify-center`}
+            >
+              <p className="text-sm text-gray-500">Loading…</p>
             </div>
           </div>
         ) : (
           <>
-            <BlogCard posts={posts} />
-            {booted && hasMore && (
-              <div className="text-center mt-8">
-                <button
-                  onClick={() => !isLoading && hasMore && setPage(p => p + 1)}
-                  disabled={isLoading}
-                  className="hover:text-muted-foreground font-medium underline disabled:opacity-50 disabled:cursor-not-allowed"
+            {(booted && !isLoading && (posts?.length ?? 0) === 0) ? (
+              <div className="w-full max-w-[1200px] mx-auto">
+                <div
+                  className={`rounded-xl border border-black/5 dark:border-white/10
+                        bg-[var(--color-bg-articles-desktop)]/60 ${CARD_MIN_H}
+                        flex items-center justify-center`}
                 >
-                  {isLoading ? "Loading..." : "View more"}
-                </button>
+                  <p className="text-sm text-gray-500" aria-live="polite">
+                    {isWaiting ? `Searching in ${countdown}s…` : "No articles found"}
+                  </p>
+                </div>
+              </div>
+            ) : (
+              <div className="w-full max-w-[1200px] mx-auto">
+                <div className="rounded-xl border border-black/5 dark:border-white/10 bg-[var(--color-bg-articles-desktop)]/60 p-4 md:p-6">
+                  <BlogCard posts={posts} />
+                  <div className="mt-6 flex justify-center min-h-[44px]">
+                    {booted && hasMore && (
+                      <button
+                        onClick={() => !isLoading && hasMore && setPage(p => p + 1)}
+                        disabled={isLoading}
+                        className="mx-auto block rounded-full border px-5 py-2 bg-white hover:bg-neutral-100 disabled:opacity-50"
+                      >
+                        {isLoading ? "Loading…" : "View more"}
+                      </button>
+                    )}
+                  </div>
+                </div>
               </div>
             )}
           </>
         )}
       </div>
-
     </>
   );
 };

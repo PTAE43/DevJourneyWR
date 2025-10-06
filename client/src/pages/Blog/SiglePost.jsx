@@ -8,10 +8,13 @@ import { useToaster, Message } from "rsuite";
 import { useAuth } from "@/contexts/AuthContext";
 import LikeButton from "@/components/Likes/LikeButton";
 import { api } from "@/lib/api";
-import { formatBKK24 } from "@/lib/datetime";
+import { formatBKK24, formatBKKDate } from "@/lib/datetime";
+import ConfirmDialog from "@/components/Popup/ConfirmDialog";
+import AuthGateDialog from "@/components/Popup/AuthGateDialog";
+
+const COMMENTS_PAGE_SIZE = 5;
 
 export default function SiglePost() {
-
     const toaster = useToaster();
     const { user } = useAuth();
 
@@ -24,7 +27,13 @@ export default function SiglePost() {
     const [sending, setSending] = useState(false);
     const [comments, setComments] = useState([]);
     const [loadingComments, setLoadingComments] = useState(false);
+    const [loadingMore, setLoadingMore] = useState(false);
     const [filter, setFilter] = useState("new");
+    const [page, setPage] = useState(1);
+    const [hasMore, setHasMore] = useState(true);
+
+    const [confirmDeleteId, setConfirmDeleteId] = useState(null);
+    const [authGateOpen, setAuthGateOpen] = useState(false);
 
     const { slugOrId } = useParams();
 
@@ -33,7 +42,6 @@ export default function SiglePost() {
         (async () => {
             setLoading(true);
             try {
-
                 const asNumber = Number(slugOrId);
                 const isId = Number.isFinite(asNumber) && String(asNumber) === slugOrId;
 
@@ -41,16 +49,15 @@ export default function SiglePost() {
                 const { data, error } = await supabase
                     .from("posts")
                     .select(`
-                        id, title, description, content, images, created_at, published, likes_count,category_id,
-                        category:categories!posts_category_id_fkey ( id, name )
-                    `)
+            id, title, description, content, images, created_at, published, likes_count, category_id,
+            category:categories!posts_category_id_fkey ( id, name )
+          `)
                     .eq("id", asNumber)
                     .single();
 
                 if (error) throw error;
 
                 setPost(data || null);
-                // scroll ขึ้นอย่างนุ่มนวล
                 window.scrollTo({ top: 0, behavior: "smooth" });
             } catch (e) {
                 setError(e.message || "Failed to load post.");
@@ -60,23 +67,38 @@ export default function SiglePost() {
         })();
     }, [slugOrId]);
 
+    // mapper ช่วยจัดรูปร่าง
+    const mapComments = (data) =>
+        (data || []).map((c) => ({
+            id: c.id,
+            user_id: c.user_id,
+            content: c.content,
+            created_at: c.created_at,
+            author_name: c.author?.name || "Anonymous",
+            author_avatar:
+                c.author?.profile_pic || "/images/profile/default-avatar.png",
+        }));
+
     // Load comments
-    async function fetchComments(postId) {
+    async function fetchComments(postId, { reset = false, pageArg = 1 } = {}) {
         if (!postId) return;
-        setLoadingComments(true);
+
+        reset ? setLoadingComments(true) : setLoadingMore(true);
         try {
-            const { comments } = await api.get("/comments", {
-                params: { postId, order: filter },  // new|old|mine
-            });
-            setComments(
-                (comments || []).map(c => ({
-                    id: c.id,
-                    user_id: c.user_id,
-                    content: c.content,
-                    created_at: c.created_at,
-                    author_name: c.author?.name || "Anonymous",
-                    author_avatar: c.author?.profile_pic || "/images/profile/default-avatar.png",
-                }))
+            const limit = COMMENTS_PAGE_SIZE;
+            const res = await api.get("/comments", { params: { postId, order: filter, page, limit: 5 } });
+
+            const list = mapComments(res?.comments);
+            if (reset) setComments(list);
+            else setComments((prev) => [...prev, ...list]);
+
+            const moreByMeta =
+                typeof res?.totalPages === "number" && typeof res?.currentPage === "number"
+                    ? res.currentPage < res.totalPages
+                    : undefined;
+
+            setHasMore(
+                typeof moreByMeta === "boolean" ? moreByMeta : list.length === limit
             );
         } catch (e) {
             toaster.push(
@@ -86,14 +108,16 @@ export default function SiglePost() {
                 { placement: "bottomCenter" }
             );
         } finally {
-            setLoadingComments(false);
+            reset ? setLoadingComments(false) : setLoadingMore(false);
         }
     }
 
+    // ครั้งแรก/เปลี่ยน filter ให้ reset หน้าและโหลดใหม่
     useEffect(() => {
         if (post?.id) {
-            console.log("fetch comments ->", { postId: post.id, filter });
-            fetchComments(post.id);
+            setPage(1);
+            setHasMore(true);
+            fetchComments(post.id, { reset: true, pageArg: 1 });
         }
     }, [post?.id, filter]);
 
@@ -124,16 +148,28 @@ export default function SiglePost() {
             const { comment } = await api.post("/comments", {
                 body: { postId: post.id, content: text },
             });
+
             const newItem = {
                 id: comment.id,
                 user_id: comment.user_id,
                 content: comment.content,
                 created_at: comment.created_at,
                 author_name: comment.author?.name || user?.email || "You",
-                author_avatar: comment.author?.profile_pic || user?.user_metadata?.avatar_url || "/images/profile/default-avatar.png",
+                author_avatar:
+                    comment.author?.profile_pic ||
+                    user?.user_metadata?.avatar_url ||
+                    "/images/profile/default-avatar.png",
             };
 
-            setComments((prev) => [newItem, ...prev]);
+            // "Latest"
+            if (filter === "new" && page === 1) {
+                setComments((prev) => [newItem, ...prev]);
+            } else {
+                setPage(1);
+                setHasMore(true);
+                fetchComments(post.id, { reset: true, pageArg: 1 });
+            }
+
             setDraft("");
         } catch (e) {
             toaster.push(
@@ -147,11 +183,12 @@ export default function SiglePost() {
         }
     }
 
-    // Delete comment (owner only by RLS)
-    async function handleDelete(id) {
+    // Delete comment
+    async function handleDeleteConfirmed() {
+        if (!confirmDeleteId) return;
         try {
-            await api.delete("/comments", { params: { id } });
-            setComments((prev) => prev.filter((c) => c.id !== id));
+            await api.delete("/comments", { params: { id: confirmDeleteId } });
+            setComments((prev) => prev.filter((c) => c.id !== confirmDeleteId));
         } catch (e) {
             toaster.push(
                 <Message type="error" closable>
@@ -159,8 +196,18 @@ export default function SiglePost() {
                 </Message>,
                 { placement: "bottomCenter" }
             );
+        } finally {
+            setConfirmDeleteId(null);
         }
     }
+
+    const requireAuthForLike = () => {
+        if (!user) {
+            setAuthGateOpen(true);
+            return true;
+        }
+        return false;
+    };
 
     const ArrangeContent = useMemo(
         () => String(post?.content || "").replace(/(##\s*)/g, "\n\n$1"),
@@ -170,6 +217,13 @@ export default function SiglePost() {
     if (loading) return <SkeletonPost minHight="70vh" />;
     if (error) return <div className="mx-auto max-w-[1200px] px-4 py-8">{error}</div>;
     if (!post) return null;
+
+    const shareUrl = typeof window !== "undefined" ? window.location.href : "";
+    const encodedUrl = encodeURIComponent(shareUrl);
+    const encodedText = encodeURIComponent(post?.title || "");
+    const fbHref = `https://www.facebook.com/sharer/sharer.php?u=${encodedUrl}`;
+    const liHref = `https://www.linkedin.com/sharing/share-offsite/?url=${encodedUrl}`;
+    const xHref = `https://twitter.com/intent/tweet?url=${encodedUrl}&text=${encodedText}`;
 
     return (
         <article className="mx-auto max-w-[1200px] px-4 pb-8">
@@ -191,11 +245,15 @@ export default function SiglePost() {
             )}
 
             <div className="mt-6 grid grid-cols-1 gap-6 lg:grid-cols-3">
-                {/* Left: content */}
+                {/* Left */}
                 <div className="lg:col-span-2">
                     <div className="flex items-center md:py-4">
-                        <span className="category_posts">{post.category?.name}</span>
-                        <span className="pl-4">{post.created_at}</span>
+                        {(() => {
+                            const cat = Array.isArray(post?.category) ? post.category[0] : post?.category;
+                            const catName = cat?.name || "—";
+                            return <span className="category_posts">{catName}</span>;
+                        })()}
+                        <span className="pl-4">{formatBKKDate(post.created_at)}</span>
                     </div>
 
                     <h1 className="mt-2 leading-[32px] md:leading-[40px] text-2xl md:text-4xl font-bold text-[var(--color-h1-title)]">
@@ -213,14 +271,19 @@ export default function SiglePost() {
                     </div>
 
                     {/* like / share / social */}
-                    <div className="grid items-center grid-cols-1 lg:grid-cols-3 rounded-xl border-2 px-4 py-4 mt-8 gap-3 text-sm bg-[var(--color-bg-like-share)]">
+                    <div className="grid items-center grid-cols-1 lg:grid-cols-3 rounded-xl px-4 py-4 mt-8 gap-3 text-sm bg-[var(--color-bg-like-share)]">
                         <div className="lg:col-span-1">
-                            <LikeButton postId={post.id} initialCount={post.likes_count ?? 0} className="mt-2" />
+                            <LikeButton
+                                postId={post.id}
+                                initialCount={post.likes_count ?? 0}
+                                className="px-7 hover:bg-red-100"
+                                onRequireAuth={requireAuthForLike}
+                            />
                         </div>
 
-                        <div className="flex justify-end lg:col-span-2 gap-2">
+                        <div className="flex justify-end lg:col-span-2 gap-1">
                             <button
-                                className="flex items-center rounded-full border-2 px-3 py-1 gap-1 bg-white hover:bg-sky-200"
+                                className="flex items-center rounded-full border px-8 py-1 gap-1 mr-8 bg-white hover:bg-gray-100"
                                 onClick={async () => {
                                     await navigator.clipboard.writeText(window.location.href);
                                     toaster.push(<Message type="success">Link copied.</Message>, {
@@ -232,30 +295,35 @@ export default function SiglePost() {
                                 Copy link
                             </button>
 
-                            <Link to="https://www.facebook.com" target="_blank">
+                            <a href={fbHref} target="_blank" rel="noopener noreferrer">
                                 <img
                                     src="/images/posts/Facebook_black.png"
                                     width={48}
                                     height={48}
-                                    className="rounded-full bg-white hover:border"
+                                    className="rounded-full p-1 bg-white hover:opacity-90"
+                                    alt="Share to Facebook"
                                 />
-                            </Link>
-                            <Link to="https://www.linkedin.com/in/ptae43/" target="_blank">
+                            </a>
+
+                            <a href={liHref} target="_blank" rel="noopener noreferrer">
                                 <img
                                     src="/images/posts/LinkedIN_black.png"
                                     width={48}
                                     height={48}
-                                    className="rounded-full bg-white hover:border"
+                                    className="rounded-full p-1 bg-white hover:opacity-90"
+                                    alt="Share to LinkedIn"
                                 />
-                            </Link>
-                            <Link to="https://x.com/home" target="_blank">
+                            </a>
+
+                            <a href={xHref} target="_blank" rel="noopener noreferrer">
                                 <img
                                     src="/images/posts/Twitter_black.png"
                                     width={48}
                                     height={48}
-                                    className="rounded-full bg-white hover:border"
+                                    className="rounded-full p-1 bg-white hover:opacity-90"
+                                    alt="Share to X"
                                 />
-                            </Link>
+                            </a>
                         </div>
                     </div>
 
@@ -277,9 +345,7 @@ export default function SiglePost() {
                                 <span>{draft.trim().length}/500</span>
                                 <button
                                     onClick={handleSend}
-                                    disabled={
-                                        sending || draft.trim().length === 0 || draft.trim().length > 500
-                                    }
+                                    disabled={sending || draft.trim().length === 0 || draft.trim().length > 500}
                                     className="rounded-full bg-black px-6 py-2 text-white hover:opacity-90 disabled:opacity-50"
                                 >
                                     {sending ? "Sending..." : "Send"}
@@ -290,30 +356,32 @@ export default function SiglePost() {
 
                     {/* Comments list */}
                     <div className="mt-6 space-y-6">
-
                         {/* Filter bar */}
                         <div className="flex items-center gap-2 text-sm">
                             <div>
-                                {["new", "old", "mine"].map(k => (
+                                {["new", "old", "mine"].map((k) => (
                                     <button
                                         key={k}
                                         onClick={() => setFilter(k)}
-                                        className={`rounded-full border px-3 py-1 ${filter === k ? "bg-black text-white" : "bg-white hover:bg-neutral-100"}`}
+                                        className={`rounded-full border px-3 py-1 ${filter === k ? "bg-black text-white" : "bg-white hover:bg-neutral-100"
+                                            }`}
                                     >
                                         {k === "new" ? "Latest" : k === "old" ? "Oldest" : "Mine"}
                                     </button>
                                 ))}
                             </div>
-                            {loadingComments && (<div className="text-sm text-gray-500">Loading…</div>)}
+                            {loadingComments && <div className="text-sm text-gray-500">Loading…</div>}
                         </div>
 
-
-                        {!loadingComments && comments.length === 0 && (<div className="text-sm text-gray-500">Be the first to comment.</div>)}
+                        {!loadingComments && comments.length === 0 && (
+                            <div className="text-sm text-gray-500">Be the first to comment.</div>
+                        )}
 
                         {comments.map((c) => (
                             <div
                                 key={c.id}
-                                className={`border-b-2 p-4 px-4 ${c.user_id === user?.id ? "bg-[#fafafa] rounded-lg px-2" : ""}`}
+                                className={`border-b-2 p-4 px-4 ${c.user_id === user?.id ? "bg-[#fafafa] rounded-lg px-2" : ""
+                                    }`}
                             >
                                 <div className="flex items-center font-semibold gap-3">
                                     <img
@@ -330,7 +398,7 @@ export default function SiglePost() {
 
                                     {c.user_id === user?.id && (
                                         <button
-                                            onClick={() => handleDelete(c.id)}
+                                            onClick={() => setConfirmDeleteId(c.id)}
                                             className="text-xs rounded-full border px-5 py-2 hover:bg-red-600 hover:text-white"
                                             title="Delete comment"
                                         >
@@ -342,6 +410,24 @@ export default function SiglePost() {
                                 <div className="pt-3 text-gray-700 leading-relaxed">{c.content}</div>
                             </div>
                         ))}
+
+                        {/* Load more */}
+                        {comments.length > 0 && hasMore && (
+                            <div className="pt-2">
+                                <button
+                                    onClick={() => {
+                                        if (loadingMore || !hasMore) return;
+                                        const next = page + 1;
+                                        setPage(next);
+                                        fetchComments(post.id, { reset: false, pageArg: next });
+                                    }}
+                                    disabled={loadingMore}
+                                    className="mx-auto block rounded-full border px-5 py-2 bg-white hover:bg-neutral-100 disabled:opacity-50"
+                                >
+                                    {loadingMore ? "Loading…" : "Load more"}
+                                </button>
+                            </div>
+                        )}
                     </div>
                 </div>
 
@@ -376,6 +462,18 @@ export default function SiglePost() {
                     </div>
                 </div>
             </div>
+
+            <ConfirmDialog
+                open={!!confirmDeleteId}
+                onClose={() => setConfirmDeleteId(null)}
+                title="Delete comment"
+                description="Do you want to delete this comment?"
+                confirmText="Delete"
+                cancelText="Cancel"
+                onConfirm={handleDeleteConfirmed}
+            />
+
+            <AuthGateDialog open={authGateOpen} onClose={() => setAuthGateOpen(false)} />
         </article>
     );
 }

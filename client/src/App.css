@@ -30,8 +30,8 @@ html, body, #root { height: 100%; }
   --color-bg-footer: #EFEEEB;
 /*Section Articles & Search*/
   --color-title-latest: #26231E;
-  --color-text-selected: #43403B;
-  --color-bg-selected: #DAD6D1;
+  --color-text-selected: #ffffff;
+  --color-bg-selected: #26231E;
   --color-text-articles: #75716B;
   --color-text-articles-hover:#26231E;
   --color-bg-articles: #EFEEEB;
@@ -40,7 +40,7 @@ html, body, #root { height: 100%; }
   --color-h1-title: #26231E;
   --color-text-content: #43403B;
   --color-bg-author: #efeeeb50;
-  --color-bg-like-share: #EFEEEB;
+  --color-bg-like-share: #efeeeb50;
   --color-button-like-hover: #ff001e;
     
 }

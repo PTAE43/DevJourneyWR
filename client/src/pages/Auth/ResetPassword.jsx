@@ -2,6 +2,7 @@ import { useState, useMemo, useCallback } from "react";
 import { supabase } from "@/lib/supabaseClient";
 import { Message, useToaster } from "rsuite";
 import { Eye, EyeOff } from "lucide-react";
+import ConfirmDialog from "@/components/Popup/ConfirmDialog";
 
 export default function ResetPassword() {
 
@@ -160,29 +161,16 @@ export default function ResetPassword() {
                 </div>
             </div>
 
-            {confirmOpen && (
-                <div className="fixed inset-0 z-50 grid place-items-center bg-black/40">
-                    <div className="w-[520px] max-w-[92vw] rounded-2xl bg-white p-6 shadow-xl">
-                        <div className="text-lg font-semibold mb-2 text-center">Reset password</div>
-                        <p className="text-center text-sm text-neutral-600">
-                            Do you want to reset your password?
-                        </p>
-
-                        <div className="mt-6 flex items-center justify-center gap-3">
-                            <button className="rounded-full border px-5 py-2" onClick={() => setConfirmOpen(false)} disabled={loading}>
-                                Cancel
-                            </button>
-                            <button
-                                className="rounded-full bg-neutral-900 px-6 py-2 text-white disabled:opacity-50"
-                                onClick={doReset}
-                                disabled={loading}
-                            >
-                                {loading ? "Resetting..." : "Reset"}
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            )}
+            <ConfirmDialog
+                open={confirmOpen}
+                onClose={() => setConfirmOpen(false)}
+                title="Reset password"
+                description="Do you want to reset your password?"
+                confirmText="Reset"
+                cancelText="Cancel"
+                loading={loading}
+                onConfirm={doReset}
+            />
         </div>
     );
 }

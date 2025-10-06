@@ -17,3 +17,15 @@ export function formatBKK24(iso, { locale = 'en-GB' } = {}) {
 
     return `${date} at ${time}`; 
 }
+
+//แบบวันที่อย่างเดียว (ไม่มีเวลา)
+export function formatBKKDate(iso, { locale = 'en-GB' } = {}) {
+  if (!iso) return '';
+  const d = new Date(iso);
+  return new Intl.DateTimeFormat(locale, {
+    timeZone: 'Asia/Bangkok',
+    day: '2-digit',
+    month: 'long',
+    year: 'numeric',
+  }).format(d);
+}

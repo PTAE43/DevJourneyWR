@@ -18,7 +18,7 @@ export default function App() {
     <Router>
       <div className="min-h-screen flex flex-col">
         <NavBar />
-        <main className="flex-1 md:mt-[50px]">
+        <main className="flex-1 md:mt-[35px]">
           <Routes>
             <Route path="/" element={<><HeroSection /><ArticleSection /></>} />
             <Route path="/posts/:slugOrId" element={<SiglePost />} />
