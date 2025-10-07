@@ -3,6 +3,7 @@ import { NavLink, Outlet, useLocation, useNavigate } from "react-router-dom";
 import { User, Key, LogOut } from "lucide-react";
 import { supabase } from "@/lib/supabaseClient";
 import { api } from "@/lib/api";
+import default_avatar from "@/assets/images/profile/default-avatar.png"
 
 const ProfileCtx = createContext(null);
 export function useProfile() {
@@ -49,7 +50,7 @@ export default function ProfileLayout() {
                                 alt="avatar"
                                 className="h-12 w-12 rounded-full object-cover ring-1 ring-black/10"
                                 onError={(e) => {
-                                    e.currentTarget.src = "/src/assets/images/profile/default-avatar.png";
+                                    e.currentTarget.src = default_avatar;
                                 }}
                                 loading="lazy"
                                 referrerPolicy="no-referrer"

@@ -3,6 +3,7 @@ import { Link, useLocation, useNavigate } from "react-router-dom";
 import { Bell, ChevronDown, LogOut, KeyRound, User as UserIcon, LayoutDashboard } from "lucide-react";
 import { supabase } from "@/lib/supabaseClient";
 import { useAuth } from "@/contexts/AuthContext";
+import default_avatar from "@/assets/images/profile/default-avatar.png"
 
 export default function UserMenu({ me }) {
     const { isAuthed } = useAuth();
@@ -45,7 +46,7 @@ export default function UserMenu({ me }) {
     if (!isAuthed) return null;
 
     const displayName = me?.name || me?.email || "User";
-    const avatarSrc = me?.profile_pic || "/src/assets/images/profile/default-avatar.png";
+    const avatarSrc = me?.profile_pic || default_avatar;
 
     return (
         <div className="flex items-center gap-3 relative" ref={popRef}>
@@ -65,7 +66,7 @@ export default function UserMenu({ me }) {
                 <img
                     key={avatarSrc} 
                     src={avatarSrc}
-                    onError={(e) => { e.currentTarget.src = "/src/assets/images/profile/default-avatar.png"; }}
+                    onError={(e) => { e.currentTarget.src = default_avatar; }}
                     className="h-8 w-8 rounded-full object-cover"
                     alt="avatar"
                     loading="lazy"

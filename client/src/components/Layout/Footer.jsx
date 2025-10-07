@@ -8,10 +8,10 @@ const Footer = () => (
             <div className="flex flex-col items-center gap-4 lg:flex-row lg:items-center lg:justify-between">
                 <div className="flex items-center gap-4">
                     <div className="font-medium text-[var(--color-text-footer)]">Get in touch</div>
-                    <a className="inline-flex items-center justify-center rounded-full" href="#" aria-label="LinkedIn">
+                    <a className="inline-flex items-center justify-center rounded-full" href="https://www.linkedin.com/in/ptae43" aria-label="LinkedIn">
                         <img src={iconLinkedIN_black} alt="LinkedIn" />
                     </a>
-                    <a className="inline-flex items-center justify-center rounded-full" href="#" aria-label="GitHub">
+                    <a className="inline-flex items-center justify-center rounded-full" href="https://github.com/PTAE43" aria-label="GitHub">
                         <img src={iconGithub_black} alt="GitHub" />
                     </a>
                     <a className="inline-flex items-center justify-center rounded-full" href="#" aria-label="Google">
