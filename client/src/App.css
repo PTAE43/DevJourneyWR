@@ -42,7 +42,11 @@ html, body, #root { height: 100%; }
   --color-bg-author: #efeeeb50;
   --color-bg-like-share: #efeeeb50;
   --color-button-like-hover: #ff001e;
-    
+  /*Admin Panel*/
+  --color-h1-adminpanel: #F2B68C;
+  --color-bg-adminpanel: #EFEEEB;
+  --color-bg-item: #DAD6D1;
+  --color-bg-layout: #F9F8F6;
 }
 
 /*---break---*/
