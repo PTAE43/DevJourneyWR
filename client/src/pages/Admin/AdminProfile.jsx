@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Message, useToaster } from "rsuite";
 import { api } from "@/lib/api";
+import default_avatar from "@/assets/images/profile/default-avatar.png"
 
 export default function AdminProfile() {
     const [form, setForm] = useState({ name: "", username: "", email: "", bio: "", profile_pic: "" });
@@ -61,7 +62,7 @@ export default function AdminProfile() {
             <div className="mt-10 px-12 grid gap-4 max-w-2xl">
                 <div className="flex items-center gap-8">
                     <img
-                        src={form.profile_pic || "/src/assets/images/profile/default-avatar.png"}
+                        src={form.profile_pic || default_avatar}
                         className="w-[120px] h-[120px] rounded-full object-cover ring-1 ring-black/10"
                     />
                     {/* ปุ่มอัปโหลด (mock) */}
