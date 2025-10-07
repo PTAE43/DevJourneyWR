@@ -76,7 +76,7 @@ export default function SiglePost() {
             created_at: c.created_at,
             author_name: c.author?.name || "Anonymous",
             author_avatar:
-                c.author?.profile_pic || "/images/profile/default-avatar.png",
+                c.author?.profile_pic || "/src/assets/images/profile/default-avatar.png",
         }));
 
     // Load comments
@@ -158,7 +158,7 @@ export default function SiglePost() {
                 author_avatar:
                     comment.author?.profile_pic ||
                     user?.user_metadata?.avatar_url ||
-                    "/images/profile/default-avatar.png",
+                    "/src/assets/images/profile/default-avatar.png",
             };
 
             // "Latest"
@@ -291,13 +291,13 @@ export default function SiglePost() {
                                     });
                                 }}
                             >
-                                <img src="/images/posts/Copy_light.png" width={24} height={24} />
+                                <img src="/src/assets/images/posts/Copy_light.png" width={24} height={24} />
                                 Copy link
                             </button>
 
                             <a href={fbHref} target="_blank" rel="noopener noreferrer">
                                 <img
-                                    src="/images/posts/Facebook_black.png"
+                                    src="/src/assets/images/posts/Facebook_black.png"
                                     width={48}
                                     height={48}
                                     className="rounded-full p-1 bg-white hover:opacity-90"
@@ -307,7 +307,7 @@ export default function SiglePost() {
 
                             <a href={liHref} target="_blank" rel="noopener noreferrer">
                                 <img
-                                    src="/images/posts/LinkedIN_black.png"
+                                    src="/src/assets/images/posts/LinkedIN_black.png"
                                     width={48}
                                     height={48}
                                     className="rounded-full p-1 bg-white hover:opacity-90"
@@ -317,7 +317,7 @@ export default function SiglePost() {
 
                             <a href={xHref} target="_blank" rel="noopener noreferrer">
                                 <img
-                                    src="/images/posts/Twitter_black.png"
+                                    src="/src/assets/images/posts/Twitter_black.png"
                                     width={48}
                                     height={48}
                                     className="rounded-full p-1 bg-white hover:opacity-90"
@@ -437,7 +437,7 @@ export default function SiglePost() {
                         <div className="rounded-xl border border-black/10 bg-[var(--color-bg-author)] p-4">
                             <div className="flex items-center font-semibold border-b-2 pb-4 gap-3">
                                 <img
-                                    src={post.profile || "/images/profile/default-avatar.png"}
+                                    src={post.profile || "/src/assets/images/profile/default-avatar.png"}
                                     alt={post.author || "Author"}
                                     className="w-[44px] h-[44px] rounded-full object-cover"
                                 />

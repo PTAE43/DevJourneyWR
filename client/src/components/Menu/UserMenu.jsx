@@ -45,7 +45,7 @@ export default function UserMenu({ me }) {
     if (!isAuthed) return null;
 
     const displayName = me?.name || me?.email || "User";
-    const avatarSrc = me?.profile_pic || "/images/profile/default-avatar.png";
+    const avatarSrc = me?.profile_pic || "/src/assets/images/profile/default-avatar.png";
 
     return (
         <div className="flex items-center gap-3 relative" ref={popRef}>
@@ -65,7 +65,7 @@ export default function UserMenu({ me }) {
                 <img
                     key={avatarSrc} 
                     src={avatarSrc}
-                    onError={(e) => { e.currentTarget.src = "/images/profile/default-avatar.png"; }}
+                    onError={(e) => { e.currentTarget.src = "/src/assets/images/profile/default-avatar.png"; }}
                     className="h-8 w-8 rounded-full object-cover"
                     alt="avatar"
                     loading="lazy"
