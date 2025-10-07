@@ -1,0 +1,8 @@
+{
+    "rewrites": [
+        {
+            "source": "/api/success",
+            "destination": "/api/profile?action=register-success"
+        }
+    ]
+}

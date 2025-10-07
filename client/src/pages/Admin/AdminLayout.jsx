@@ -8,6 +8,7 @@ import bell from "@/assets/images/profile/Admin/icon_bell.png";
 import reset_password from "@/assets/images/profile/Admin/icon_reset_password.png";
 import outside from "@/assets/images/profile/Admin/icon_outside.png";
 import signout from "@/assets/images/profile/Admin/icon_logout.png";
+import account from "@/assets/images/profile/Admin/icon_account.png"
 
 export default function AdminLayout() {
     const nav = useNavigate();
@@ -32,6 +33,7 @@ export default function AdminLayout() {
                         <Item to="/admin/profile" label="Profile" end icon={profile} />
                         <Item to="/admin/notifications" label="Notification" icon={bell} />
                         <Item to="/admin/reset" label="Reset password" icon={reset_password} />
+                        <Item to="/admin/users" label="Users management" icon={account} />
                     </nav>
                 </div>
 

@@ -86,11 +86,22 @@ export default function SiglePost() {
         reset ? setLoadingComments(true) : setLoadingMore(true);
         try {
             const limit = COMMENTS_PAGE_SIZE;
-            const res = await api.get("/comments", { params: { postId, order: filter, page, limit: 5 } });
+            const pageToUse = Number.isFinite(pageArg) ? pageArg : 1;
+            const res = await api.get("/comments", {
+                params: { postId, order: filter, page: pageToUse, limit }
+            });
 
             const list = mapComments(res?.comments);
-            if (reset) setComments(list);
-            else setComments((prev) => [...prev, ...list]);
+            setComments(prev => {
+                const merged = reset ? list : [...prev, ...list];
+                // กันคอมเมนต์ซ้ำด้วย id
+                const seen = new Set();
+                const dedup = [];
+                for (const c of merged) {
+                    if (!seen.has(c.id)) { seen.add(c.id); dedup.push(c); }
+                }
+                return dedup;
+            });
 
             const moreByMeta =
                 typeof res?.totalPages === "number" && typeof res?.currentPage === "number"
