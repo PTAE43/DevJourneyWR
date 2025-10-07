@@ -59,13 +59,13 @@ export default function Register() {
                 );
             }
 
-            // อัพเซิร์ต profile ฝั่ง DB (ต้องใส่ body ให้ถูก)
-            await api.post("/success", {
+            // /success อัปเดต/สร้างโปรไฟล์ในตาราง users
+            await api.put("/profile", {
                 body: { name: form.name, username: form.username, profile_pic: null },
             });
 
             // ไปหน้าโปรไฟล์/หน้าแรกตามต้องการ
-            navigate("/profile", { replace: true });
+            navigate("/success", { replace: true });
         } catch (err) {
             const msg = friendlyAuthError(err?.message);
             toaster.push(

@@ -5,6 +5,11 @@ import { applyCors } from "./lib/cors.js";
 export default async function handler(req, res) {
     if (applyCors(req, res)) return;
 
+    // rewrite มาจาก /api/success
+    if (req.method === "POST" && String(req.query.action) === "register-success") {
+        return res.status(200).json({ ok: true });
+    }
+
     try {
         if (req.method === "GET") return getMe(req, res);
         if (req.method === "PUT") return upsertMe(req, res);

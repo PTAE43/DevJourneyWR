@@ -26,6 +26,9 @@ import AdminCategories from "./pages/Admin/AdminCategories";
 import AdminNotifications from "./pages/Admin/AdminNotifications";
 import AdminResetPassword from "./pages/Admin/AdminResetPassword";
 
+// superadmin
+import AdminUsers from "./pages/Admin/AdminUsers";
+
 export default function App() {
   return (
     <Router>
@@ -57,6 +60,7 @@ export default function App() {
             <Route path="categories" element={<AdminCategories />} />
             <Route path="notifications" element={<AdminNotifications />} />
             <Route path="reset" element={<AdminResetPassword />} />
+            <Route path="users" element={<AdminUsers />} />
           </Route>
         </Route>
       </Routes>
