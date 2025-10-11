@@ -48,7 +48,8 @@ export default function AdminLogin() {
 
             const r = await resp.json();
 
-            if (r?.user?.role !== "admin") {
+            const role = r?.user?.role;
+            if (!["admin", "superadmin"].includes(role)) {
                 await supabase.auth.signOut();
                 throw new Error("This account is not an admin.");
             }

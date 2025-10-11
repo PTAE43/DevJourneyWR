@@ -3,7 +3,8 @@ import { Navigate, Outlet, useLocation } from "react-router-dom";
 import { api } from "@/lib/api";
 
 export default function RequireAdmin() {
-    const [state, setState] = useState({ loading: true, ok: false });
+    const [loading, setLoading] = useState(true);
+    const [ok, setOk] = useState(false);
     const loc = useLocation();
 
     useEffect(() => {
@@ -11,16 +12,23 @@ export default function RequireAdmin() {
         (async () => {
             try {
                 const r = await api.get("/profile");
-                const role = r?.user?.role || "user";
-                if (alive) setState({ loading: false, ok: role === "admin" });
+                const role = r?.user?.role ?? "user";
+                const allowed = ["admin", "superadmin"].includes(role);
+                if (alive) {
+                    setOk(allowed);
+                    setLoading(false);
+                }
             } catch {
-                if (alive) setState({ loading: false, ok: false });
+                if (alive) {
+                    setOk(false);
+                    setLoading(false);
+                }
             }
         })();
         return () => { alive = false; };
-    }, [loc.key]);
+    }, [loc.pathname]);
 
-    if (state.loading) {
+    if (loading) {
         return (
             <div className="grid min-h-[40vh] place-items-center">
                 <div className="text-sm text-gray-500">Checking permission…</div>
@@ -28,5 +36,9 @@ export default function RequireAdmin() {
         );
     }
 
-    return state.ok ? <Outlet /> : <Navigate to="/admin/login" replace />;
+    return ok ? (
+        <Outlet />
+    ) : (
+        <Navigate to="/admin/login" replace state={{ from: loc }} />
+    );
 }
