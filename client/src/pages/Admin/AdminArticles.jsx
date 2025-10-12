@@ -1,12 +1,34 @@
+// client/src/pages/Admin/AdminArticles.jsx
+import { useState } from "react";
+import ArticleList from "@/components/Admin/Article/ArticleList";
+import ArticleEditor from "@/components/Admin/Article/ArticleEditor";
+
 export default function AdminArticles() {
-    return (
-        <div className="p-6">
-            <h2 className="text-xl font-semibold mb-2">Article management</h2>
-            <div className="rounded-xl bg-white border p-6">
-                <p className="text-gray-600">
-                    This page is a mock for Phase 4 (create/edit/delete articles).
-                </p>
-            </div>
-        </div>
+    const [mode, setMode] = useState("list"); // 'list' | 'edit'
+    const [editingId, setEditingId] = useState(null); // null | 'new' | number
+
+    return mode === "list" ? (
+        <ArticleList
+            onCreate={() => {
+                setEditingId("new");
+                setMode("edit");
+            }}
+            onEdit={(id) => {
+                setEditingId(id);
+                setMode("edit");
+            }}
+        />
+    ) : (
+        <ArticleEditor
+            id={editingId}
+            onBack={() => {
+                setMode("list");
+                setEditingId(null);
+            }}
+            onDeleted={() => {
+                setMode("list");
+                setEditingId(null);
+            }}
+        />
     );
 }

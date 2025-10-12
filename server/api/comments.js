@@ -24,6 +24,30 @@ async function getComments(req, res) {
     const pageSize = Math.min(50, Math.max(1, parseInt(req.query.limit ?? "5", 10) || 5));
     const from = (pageNum - 1) * pageSize;
     const to = from + pageSize - 1;
+    const owner = String(req.query.owner || "");
+
+    // แจ้งเตือนคอมเมนต์
+    if (owner === "me") {
+        const me = await getUserFromAuthHeader(req);
+        if (!me) return res.status(401).json({ error: "Unauthorized" });
+
+        let q = supabaseAdmin
+            .from("comments")
+            .select(`
+        id, post_id, user_id, content:comment_text, created_at,
+        actor:users!comments_user_id_fkey ( id, name, profile_pic ),
+        post:posts!comments_post_id_fkey ( id, title, author_id )
+      `, { count: "exact" })
+            .eq("post.author_id", me.id)
+            .order("created_at", { ascending: false });
+
+        const { data, error, count } = await q.range(from, to);
+        if (error) throw error;
+
+        const total = count ?? 0;
+        const totalPages = Math.max(1, Math.ceil(total / pageSize));
+        return res.status(200).json({ comments: data ?? [], currentPage: pageNum, totalPages, total });
+    }
 
     if (!postId) return res.status(400).json({ error: "postId required" });
 

@@ -142,7 +142,7 @@ export default function NavBar() {
                                 <Link to="/profile/reset" onClick={() => setIsOpen(false)} className="block rounded-lg px-4 py-3 bg-[var(--color-bg-menu-toggle-mb)] shadow">
                                     Reset password
                                 </Link>
-                                {me?.role === "admin" && (
+                                {["admin", "superadmin"].includes(me?.role) && (
                                     <Link to="/admin" onClick={() => setIsOpen(false)} className="block rounded-lg px-4 py-3 bg-[var(--color-bg-menu-toggle-mb)] shadow">
                                         Admin panel
                                     </Link>

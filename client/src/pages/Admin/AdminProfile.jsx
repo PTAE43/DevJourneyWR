@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Message, useToaster } from "rsuite";
 import { api } from "@/lib/api";
 import default_avatar from "@/assets/images/profile/default-avatar.png"
+import AdminTopBar from "@/components/Admin/AdminTopBar";
 
 export default function AdminProfile() {
     const [form, setForm] = useState({ name: "", username: "", email: "", bio: "", profile_pic: "" });
@@ -44,19 +45,19 @@ export default function AdminProfile() {
     if (loading) return <div className="text-xl pl-16 mt-8">Loading…</div>;
 
     return (
-        <div className="rounded-2xl bg-[var(--color-bg-layout)]">
-            <div className="border-b-2">
-                <div className="flex justify-between items-center p-6 mx-10">
-                    <h2 className="text-xl font-semibold">Profile</h2>
-                    <button
-                        onClick={save}
-                        disabled={saving}
-                        className="rounded-full bg-neutral-900 text-white px-5 py-2 disabled:opacity-50"
-                    >
-                        {saving ? "Saving…" : "Save"}
-                    </button>
-                </div>
-            </div>
+        <>
+            <AdminTopBar
+                title="Profile"
+                actions={[
+                    {
+                        label: saving ? "Saving…" : "Save",
+                        onClick: save,
+                        variant: "primary",
+                        loading: saving,
+                        disabled: saving,
+                    },
+                ]}
+            />
 
 
             <div className="mt-10 px-12 grid gap-4 max-w-2xl">
@@ -100,7 +101,7 @@ export default function AdminProfile() {
                     />
                 </Field>
             </div>
-        </div>
+        </>
     );
 }
 

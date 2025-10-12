@@ -88,7 +88,7 @@ export default function UserMenu({ me }) {
                     <Link to="/profile/reset" role="menuitem" className="flex items-center gap-2 px-4 py-2 hover:bg-neutral-50">
                         <KeyRound className="h-4 w-4" /> Reset password
                     </Link>
-                    {me?.role === "admin" && (
+                    {["admin","superadmin"].includes(me?.role) && (
                         <Link to="/admin" role="menuitem" className="flex items-center gap-2 px-4 py-2 hover:bg-neutral-50">
                             <LayoutDashboard className="h-4 w-4" /> Admin panel
                         </Link>
