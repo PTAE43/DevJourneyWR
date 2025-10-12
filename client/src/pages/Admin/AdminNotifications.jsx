@@ -3,6 +3,7 @@ import { supabase } from "@/lib/supabaseClient";
 import { Message, useToaster } from "rsuite";
 import { Link } from "react-router-dom";
 import { formatBKK24 } from "@/lib/datetime";
+import AdminTopBar from "@/components/Admin/AdminTopBar";
 
 export default function AdminNotifications() {
     const [items, setItems] = useState([]);
@@ -56,9 +57,12 @@ export default function AdminNotifications() {
     useEffect(() => { load(); /* eslint-disable-line */ }, []);
 
     return (
-        <div className="p-6">
-            <h1 className="text-2xl font-semibold mb-4">Notification</h1>
-            <div className="rounded-xl border bg-white divide-y">
+        <>
+            <AdminTopBar 
+                title="Notification"
+            />
+
+            <div className="mt-8 mx-14 rounded-xl border bg-white divide-y">
                 {items.map(n => (
                     <div key={n.id} className="flex items-start gap-3 p-4">
                         <img
@@ -89,6 +93,6 @@ export default function AdminNotifications() {
                     <div className="p-6 text-center text-gray-500 text-sm">No notifications</div>
                 )}
             </div>
-        </div>
+        </>
     );
 }

@@ -1,6 +1,8 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabaseClient";
 import { Message, useToaster } from "rsuite";
+import AdminTopBar from "@/components/Admin/AdminTopBar";
+import { Variable } from "lucide-react";
 
 export default function AdminCategories() {
     const [q, setQ] = useState("");
@@ -66,13 +68,13 @@ export default function AdminCategories() {
     };
 
     return (
-        <div className="p-6">
-            <div className="flex items-center justify-between mb-4">
-                <h1 className="text-2xl font-semibold">Category management</h1>
-                <button onClick={() => setEdit({ name: "" })} className="rounded-full bg-neutral-900 text-white px-4 py-2">
-                    + Create category
-                </button>
-            </div>
+        <>
+            <AdminTopBar
+                title="Category manegements"
+                actions={[
+                    { label: "+ Create category", onClick: () => setEdit({ name: "" }), variant: "primary" },
+                ]}
+            />
 
             <form onSubmit={onSearch} className="mb-3">
                 <input className="border rounded px-3 py-2 w-[320px]" placeholder="Search…" value={q} onChange={e => setQ(e.target.value)} />
@@ -132,6 +134,6 @@ export default function AdminCategories() {
                     </div>
                 </div>
             )}
-        </div>
+        </>
     );
 }
