@@ -1,7 +1,7 @@
 // client/src/pages/Admin/AdminArticles.jsx
 import { useState } from "react";
-import ArticleList from "@/components/Admin/Article/ArticleList";
-import ArticleEditor from "@/components/Admin/Article/ArticleEditor";
+import ArticleList from "@/components/Admin/Article/List";
+import ArticleEditor from "@/components/Admin/Article/Editor";
 
 export default function AdminArticles() {
     const [mode, setMode] = useState("list"); // 'list' | 'edit'
