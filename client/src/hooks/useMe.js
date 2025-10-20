@@ -10,7 +10,6 @@ export function useMe() {
         setLoading(true);
         setErr("");
         try {
-            // ⬇️ api.get คืน JSON ตรงๆ
             const r = await api.get("/profile");
             setMe(r?.user || null);
         } catch (e) {
