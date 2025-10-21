@@ -1,12 +1,18 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import AdminTopBar from "@/components/Admin/AdminTopBar";
-import ConfirmPopup from "@/components/Popup/ConfirmPopup";
+import toast from "@/lib/toast";
 
 export default function CategoryEditor({ initial, onBack, onSave, onDelete }) {
     const isNew = !initial?.id;
     const [name, setName] = useState(initial?.name || "");
     const [saving, setSaving] = useState(false);
-    const [confirm, setConfirm] = useState(false);
+    // const [confirm, setConfirm] = useState(false);
+    // const [deleting, setDeleting] = useState(false);
+
+    const isGeneral = useMemo(() => {
+        const n = (initial?.name || "").trim().toLowerCase();
+        return n === "general";
+    }, [initial?.name])
 
     useEffect(() => {
         setName(initial?.name || "");
@@ -17,6 +23,10 @@ export default function CategoryEditor({ initial, onBack, onSave, onDelete }) {
         try {
             setSaving(true);
             await onSave({ id: initial?.id, name: name.trim() });
+            // toast.success("Saved.", "Category has been saved.");
+            onBack?.();
+        } catch (e) {
+            toast.error(String(e.message));
         } finally {
             setSaving(false);
         }
@@ -28,7 +38,7 @@ export default function CategoryEditor({ initial, onBack, onSave, onDelete }) {
                 title={isNew ? "Create category" : "Edit category"}
                 actions={[
                     { label: "< Back", onClick: onBack, variant: "outline" },
-                    { label: "Save", onClick: save, variant: "primary" },
+                    { label: "Save", onClick: save, variant: "primary", disabled: saving },
                 ]}
             />
 
@@ -41,7 +51,7 @@ export default function CategoryEditor({ initial, onBack, onSave, onDelete }) {
                     placeholder="Category name"
                 />
 
-                {!isNew && (
+                {/* {!isNew && (
                     <div className="mt-6 flex items-center">
                         <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
                             <path d="M10 15L10 12" stroke="#75716B" strokeLinecap="round" />
@@ -58,27 +68,42 @@ export default function CategoryEditor({ initial, onBack, onSave, onDelete }) {
                             />
                         </svg>
                         <button
-                            className="px-2 py-2 underline hover:text-red-500 transition"
+                            className="px-2 py-2 underline hover:text-red-500  transition"
                             onClick={() => setConfirm(true)}
-                            disabled={saving}
+                            disabled={saving || isGeneral}
+                            title={isGeneral ? "General cannot be deleted." : undefined}
                         >
                             Delete category
                         </button>
                     </div>
-                )}
+                )} */}
             </div>
 
-            {confirm && (
+            {/* {confirm && (
                 <ConfirmPopup
                     title="Delete category"
                     description="Do you want to delete this category?"
                     confirmText="Delete"
-                    onCancel={() => setConfirm(false)}
+                    loading={deleting}
+                    onCancel={() => !deleting && setConfirm(false)}
                     onConfirm={async () => {
-                        await onDelete?.(initial.id);
+                        if (deleting) return;
+                        setDeleting(true);
+                        const key = toast.loading("Deleting category…");
+                        try {
+                            // ย้ายบทความทั้งหมดของหมวดนี้ไป General บน backend แล้วค่อยลบ
+                            await onDelete?.(initial.id);
+                            toast.success(key, "Deleted.", "Category has been deleted.");
+                            setConfirm(false);
+                            onBack?.(); // กลับไป list โดยไม่พา popup ไปด้วย
+                        } catch (e) {
+                            toast.error(key, e);
+                        } finally {
+                            setDeleting(false);
+                        }
                     }}
                 />
-            )}
+            )} */}
         </>
     );
 }

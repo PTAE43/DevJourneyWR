@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabaseClient";
-import { Message, useToaster } from "rsuite";
+import toast from "@/lib/toast";
 import { Link } from "react-router-dom";
 import { formatBKK24 } from "@/lib/datetime";
 import AdminTopBar from "@/components/Admin/AdminTopBar";
@@ -8,7 +8,6 @@ import AdminTopBar from "@/components/Admin/AdminTopBar";
 export default function AdminNotifications() {
     const [items, setItems] = useState([]);
     const [loading, setLoading] = useState(false);
-    const toaster = useToaster();
 
     const apiBase = (() => {
         const base = import.meta.env.VITE_SERVER_URL.replace(/\/+$/, "");
@@ -48,7 +47,7 @@ export default function AdminNotifications() {
             );
             setItems(merged);
         } catch (e) {
-            toaster.push(<Message type="error" closable>{e.message}</Message>, { placement: "bottomCenter" });
+            toast.error(String(e.message));
         } finally {
             setLoading(false);
         }

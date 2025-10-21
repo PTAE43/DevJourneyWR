@@ -1,19 +1,5 @@
 import { Link } from "react-router-dom";
 
-/**
-  AdminTopBar
-  แถบหัวข้อสำหรับหน้า admin:
-  - title (string | node): ชื่อหัวข้อทางซ้าย
-  - actions (array): รายการปุ่มทางขวา
-     - { label, onClick, to, variant, loading, disabled, type, className }
-       - to: ถ้ามีจะเรนเดอร์เป็น <Link> (ใช้กับเส้นทางในแอป)
-       - onClick: ฟังก์ชันเมื่อคลิก (เรนเดอร์เป็น <button>)
-       - variant: "primary" | "neutral" | "outline" | "danger"
-       - loading: แสดงสถานะกำลังทำงาน
-       - disabled: ปิดการกด
-       - type: ชนิดปุ่ม HTML (เช่น "submit")
-  - children: ถ้าอยากแทรกคอนเทนต์อื่น ๆ ด้านล่างเส้นขอบ (ไม่ค่อยได้ใช้ แต่มีให้)
- */
 export default function AdminTopBar({
     title,
     actions = [],

@@ -1,7 +1,8 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, useRef } from "react";
 import { api } from "@/lib/api.js";
 import { uploadAvatar, removeAvatar } from "@/lib/avatars.js";
-import { useToaster, Message, Loader } from "rsuite";
+import default_avatar from "@/assets/images/profile/default-avatar.png";
+import toast from "@/lib/toast";
 import { User } from "lucide-react";
 
 // ให้ตรงกับฝั่ง server (3–24 ตัว, a–z, 0–9, . _ -)
@@ -10,7 +11,6 @@ const USERNAME_RE = /^[A-Za-z0-9._-]{3,24}$/;
 export default function ProfilePage() {
     const [me, setMe] = useState(null);
     const [form, setForm] = useState({ name: "", username: "" });
-    const [avatarUrl, setAvatarUrl] = useState("");
     const [loading, setLoading] = useState(false);
 
     const [originalAvatarUrl, setOriginalAvatarUrl] = useState("");
@@ -19,27 +19,29 @@ export default function ProfilePage() {
 
     const [touched, setTouched] = useState({ name: false, username: false });
 
-    const toaster = useToaster();
+    const fileRef = useRef(null);
+    const LOADING_SLOT = "adminProfile:upload";
+    useEffect(() => () => toast.flushSlot(LOADING_SLOT), []);
 
-    // โหลดโปรไฟล์ครั้งแรก
     useEffect(() => {
         (async () => {
             try {
-                // api.get() คืน JSON ตรง ๆ: { user: {...} }
-                const res = await api.get("/profile");
-                const u = res?.user || {};
+                const r = await api.get("/profile");
+                const u = r?.user || {};
                 setMe(u);
-                setForm({ name: u.name || "", username: u.username || "" });
-                setAvatarUrl(u.profile_pic || "");
+                setForm({
+                    name: u.name || "",
+                    username: u.username || "",
+                    email: u.email || "",
+                    bio: u.bio || "",
+                    profile_pic: u.profile_pic || "",
+                });
                 setOriginalAvatarUrl(u.profile_pic || "");
-                setOriginalAvatarPath(storagePathFromUrl(u.profile_pic));
-            } catch (err) {
-                toaster.push(
-                    <Message type="error" closable>
-                        {String(err?.message || "Failed to load profile")}
-                    </Message>,
-                    { placement: "bottomCenter" }
-                );
+                setOriginalAvatarPath(storagePathFromUrl(u.profile_pic || ""));
+            } catch {
+                toast.error("Load profile failed");
+            } finally {
+                setLoading(false);
             }
         })();
     }, []);
@@ -64,35 +66,34 @@ export default function ProfilePage() {
         return "";
     }, [form.username, touched.username]);
 
-    // อัปโหลดรูป (แค่พรีวิว + เก็บสถานะไว้ก่อน)
-    async function onPickFile(e) {
-        const file = e.target.files?.[0];
+    const onPickFile = async (file) => {
         if (!file || !me?.id) return;
 
-        const toastId = toaster.push(
-            <Message type="info" closable>
-                <div className="flex items-center gap-2">
-                    <Loader /> Uploading photo…
-                </div>
-            </Message>,
-            { placement: "bottomCenter", duration: 0 }
-        );
+        // validation เบา ๆ
+        if (!/^image\/(png|jpe?g|webp)$/i.test(file.type)) {
+            toast.error("Please use file type: JPG/PNG/WEBP.");
+            if (fileRef.current) fileRef.current.value = "";
+            return;
+        }
+        if (file.size > 2 * 1024 * 1024) {
+            toast.error("File size is limited to 2MB.");
+            if (fileRef.current) fileRef.current.value = "";
+            return;
+        }
+
+        toast.loadingIn(LOADING_SLOT, "Uploading photo…");
 
         try {
-            const up = await uploadAvatar(file, me.id);
-            setAvatarUrl(up.publicUrl);
+            const up = await uploadAvatar(file, me.id); // { publicUrl, path }
             setNewAvatar(up);
+            setForm((s) => ({ ...s, profile_pic: up.publicUrl })); // ดูภาพได้เลย
+            await toast.replaceIn(LOADING_SLOT, "success", "Image upload completed.");
         } catch (err) {
-            toaster.push(
-                <Message type="error" closable>
-                    {String(err?.message || "Upload failed")}
-                </Message>,
-                { placement: "bottomCenter" }
-            );
+            await toast.replaceIn(LOADING_SLOT, "error", "Upload failed", String(err?.message || "Please try again."));
         } finally {
-            toaster.remove(toastId);
+            if (fileRef.current) fileRef.current.value = ""; // รีเซ็ต input
         }
-    }
+    };
 
     // เช็คว่ามีการแก้ไขอะไรไหม
     const somethingChanged = useMemo(
@@ -106,10 +107,7 @@ export default function ProfilePage() {
     // บันทึกโปรไฟล์
     async function onSave() {
         if (nameErr || usernameErr) {
-            toaster.push(
-                <Message type="warning">กรุณากรอกข้อมูลให้ถูกต้อง</Message>,
-                { placement: "bottomCenter" }
-            );
+            toast.warning("Please enter correct information.");
             return;
         }
         setLoading(true);
@@ -141,21 +139,9 @@ export default function ProfilePage() {
                 profile_pic: nextAvatarUrl,
             }));
 
-            toaster.push(
-                <Message type="success" closable>
-                    Saved profile
-                    <br />
-                    <span>Your profile has been successfully updated</span>
-                </Message>,
-                { placement: "bottomCenter" }
-            );
+            toast.success("Saved profile.", "Your profile has been successfully updated.");
         } catch (err) {
-            toaster.push(
-                <Message type="error" closable>
-                    {String(err?.message || "Save failed")}
-                </Message>,
-                { placement: "bottomCenter" }
-            );
+            toast.error(String(err?.message || "Save failed."));
         } finally {
             setLoading(false);
         }
@@ -167,9 +153,9 @@ export default function ProfilePage() {
         <div className="mx-auto max-w-[550px]">
             <div className="rounded-2xl bg-[#F4F3F1] p-6">
                 <div className="flex items-center gap-6">
-                    {avatarUrl ? (
+                    {form ? (
                         <img
-                            src={avatarUrl}
+                            src={form.profile_pic || default_avatar}
                             alt="avatar"
                             className="h-[88px] w-[88px] rounded-full object-cover ring-1 ring-black/10"
                         />
@@ -180,7 +166,13 @@ export default function ProfilePage() {
                     )}
 
                     <label className="inline-flex items-center rounded-full border px-5 py-2 cursor-pointer">
-                        <input type="file" accept="image/*" onChange={onPickFile} className="hidden" />
+                        <input
+                            ref={fileRef}
+                            type="file"
+                            accept="image/*"
+                            hidden
+                            onChange={(e) => onPickFile(e.target.files?.[0] || null)}
+                            className="hidden" />
                         Upload profile picture
                     </label>
                 </div>

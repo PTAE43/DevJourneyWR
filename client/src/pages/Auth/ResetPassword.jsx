@@ -1,6 +1,6 @@
 import { useState, useMemo, useCallback } from "react";
 import { supabase } from "@/lib/supabaseClient";
-import { Message, useToaster } from "rsuite";
+import toast from "@/lib/toast";
 import { Eye, EyeOff } from "lucide-react";
 import ConfirmDialog from "@/components/Popup/ConfirmDialog";
 
@@ -11,7 +11,6 @@ export default function ResetPassword() {
     const [touched, setTouched] = useState({ current: false, next: false, confirm: false });
     const [loading, setLoading] = useState(false);
     const [confirmOpen, setConfirmOpen] = useState(false);
-    const toaster = useToaster();
 
     //handlers
     const setField = useCallback((k, v) => {
@@ -48,12 +47,7 @@ export default function ResetPassword() {
         const e = validateAll();
         if (Object.keys(e).length) {
             setTouched({ current: true, next: true, confirm: true });
-            toaster.push(
-                <Message type="warning" closable>
-                    Please fix the highlighted fields.
-                </Message>,
-                { placement: "bottomCenter" }
-            );
+            toast.warning("Please fix the highlighted fields.");
             return;
         }
         setConfirmOpen(true);
@@ -69,13 +63,10 @@ export default function ResetPassword() {
             setPwd({ current: "", next: "", confirm: "" });
             setTouched({ current: false, next: false, confirm: false });
 
-            toaster.push(<Message type="success" closable>Password has been updated</Message>, {
-                placement: "bottomCenter",
-            });
+            toast.success("Password has been updated.");
         } catch (e) {
-            toaster.push(<Message type="error" closable>{e.message}</Message>, {
-                placement: "bottomCenter",
-            });
+            setConfirmOpen(false);
+            toast.error(String(e.message));
         } finally {
             setLoading(false);
         }
@@ -102,7 +93,7 @@ export default function ResetPassword() {
                                 onClick={() => setShow(s => ({ ...s, current: !s.current }))}
                                 aria-label={show.current ? "Hide current password" : "Show current password"}
                             >
-                                {show.current ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+                                {show.current ? <Eye className="h-5 w-5" /> : <EyeOff className="h-5 w-5" />}
                             </button>
                         </div>
                     </div>
@@ -124,7 +115,7 @@ export default function ResetPassword() {
                                 onClick={() => setShow(s => ({ ...s, next: !s.next }))}
                                 aria-label={show.next ? "Hide new password" : "Show new password"}
                             >
-                                {show.next ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+                                {show.next ? <Eye className="h-5 w-5" /> : <EyeOff className="h-5 w-5" />}
                             </button>
                         </div>
                         {errors.next && <p className="mt-1 text-xs text-red-500">{errors.next}</p>}
@@ -147,7 +138,7 @@ export default function ResetPassword() {
                                 onClick={() => setShow(s => ({ ...s, confirm: !s.confirm }))}
                                 aria-label={show.confirm ? "Hide confirm password" : "Show confirm password"}
                             >
-                                {show.confirm ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+                                {show.confirm ? <Eye className="h-5 w-5" /> : <EyeOff className="h-5 w-5" />}
                             </button>
                         </div>
                         {errors.confirm && <p className="mt-1 text-xs text-red-500">{errors.confirm}</p>}

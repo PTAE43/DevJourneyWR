@@ -1,14 +1,13 @@
 import { useState } from "react";
 import { supabase } from "@/lib/supabaseClient";
 import { useNavigate, useLocation } from "react-router-dom";
-import { Message, useToaster } from "rsuite";
+import toast from "@/lib/toast";
 
 export default function AdminLogin() {
     const [email, setEmail] = useState("");
     const [pwd, setPwd] = useState("");
     const [err, setErr] = useState("");
     const [loading, setLoading] = useState(false);
-    const toaster = useToaster();
     const nav = useNavigate();
     const loc = useLocation();
 
@@ -54,13 +53,13 @@ export default function AdminLogin() {
                 throw new Error("This account is not an admin.");
             }
 
-            toaster.push(<Message type="success" closable>Welcome, admin.</Message>, { placement: "bottomCenter" });
+            toast.success("Welcome, admin.");
             const to = loc.state?.from?.pathname || "/admin";
             nav(to, { replace: true });
         } catch (e) {
             const msg = e.message || "Login failed";
             setErr(msg);
-            toaster.push(<Message type="error" closable>{msg}</Message>, { placement: "bottomCenter" });
+            toast.error(String(msg));
         } finally {
             setLoading(false);
         }

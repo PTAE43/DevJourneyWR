@@ -4,7 +4,7 @@ import { supabase } from "@/lib/supabaseClient.js";
 import SkeletonPost from "@/components/Skeletons/SkeletonsPost.jsx";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
-import { useToaster, Message } from "rsuite";
+import toast from "@/lib/toast";
 import { useAuth } from "@/contexts/AuthContext";
 import LikeButton from "@/components/Likes/LikeButton";
 import { api } from "@/lib/api";
@@ -20,7 +20,6 @@ import default_avatar from "@/assets/images/profile/default-avatar.png"
 const COMMENTS_PAGE_SIZE = 5;
 
 export default function SiglePost() {
-    const toaster = useToaster();
     const { user } = useAuth();
 
     const [post, setPost] = useState(null);
@@ -117,12 +116,7 @@ export default function SiglePost() {
                 typeof moreByMeta === "boolean" ? moreByMeta : list.length === limit
             );
         } catch (e) {
-            toaster.push(
-                <Message type="error" closable>
-                    {e.message || "Load comments failed."}
-                </Message>,
-                { placement: "bottomCenter" }
-            );
+            toast.error(String(e.message || "Load comments failed."));
         } finally {
             reset ? setLoadingComments(false) : setLoadingMore(false);
         }
@@ -143,19 +137,12 @@ export default function SiglePost() {
         if (!text) return;
 
         if (!user) {
-            toaster.push(
-                <Message type="warning" closable>
-                    Please log in to comment.
-                </Message>,
-                { placement: "bottomCenter" }
-            );
+            toast.warning("Please log in to comment.");
             return;
         }
 
         if (text.length > 500) {
-            toaster.push(<Message type="warning">Max 500 characters.</Message>, {
-                placement: "bottomCenter",
-            });
+            toast.warning("Max 500 characters.");
             return;
         }
 
@@ -188,12 +175,7 @@ export default function SiglePost() {
 
             setDraft("");
         } catch (e) {
-            toaster.push(
-                <Message type="error" closable>
-                    {e.message || "Send comment failed."}
-                </Message>,
-                { placement: "bottomCenter" }
-            );
+            toast.error(String(e.message || "Send comment failed."));
         } finally {
             setSending(false);
         }
@@ -206,12 +188,7 @@ export default function SiglePost() {
             await api.delete("/comments", { params: { id: confirmDeleteId } });
             setComments((prev) => prev.filter((c) => c.id !== confirmDeleteId));
         } catch (e) {
-            toaster.push(
-                <Message type="error" closable>
-                    {e.message || "Delete failed."}
-                </Message>,
-                { placement: "bottomCenter" }
-            );
+            toast.error(String(e.message || "Delete failed."));
         } finally {
             setConfirmDeleteId(null);
         }
@@ -302,9 +279,7 @@ export default function SiglePost() {
                                 className="flex items-center rounded-full border px-8 py-1 gap-1 mr-8 bg-white hover:bg-gray-100"
                                 onClick={async () => {
                                     await navigator.clipboard.writeText(window.location.href);
-                                    toaster.push(<Message type="success">Link copied.</Message>, {
-                                        placement: "bottomCenter",
-                                    });
+                                    toast.success("Link copied.");
                                 }}
                             >
                                 <img src={Copy_light} width={24} height={24} />
@@ -374,7 +349,7 @@ export default function SiglePost() {
                     <div className="mt-6 space-y-6">
                         {/* Filter bar */}
                         <div className="flex items-center gap-2 text-sm">
-                            <div>
+                            <div className="flex gap-2">
                                 {["new", "old", "mine"].map((k) => (
                                     <button
                                         key={k}

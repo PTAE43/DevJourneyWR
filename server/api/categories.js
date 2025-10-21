@@ -83,13 +83,37 @@ async function remove(req, res) {
         const id = Number(req.query.id);
         if (!id) return res.status(400).json({ error: "id required" });
 
-        const { error } = await supabaseAdmin.from("categories").delete().eq("id", id);
-        if (error) throw error;
+        // หา General
+        const { data: cats, error: catErr } = await supabaseAdmin
+            .from("categories").select("id,name");
+        if (catErr) throw catErr;
+
+        const general = (cats || []).find(
+            (c) => String(c.name || "").trim().toLowerCase() === "general"
+        );
+        if (!general) return res.status(400).json({ error: 'Category "General" not found' });
+
+        if (id === general.id) {
+            return res.status(400).json({ error: 'General cannot be deleted' });
+        }
+
+        // reassignToId: ถ้า client ส่งมาก็ใช้; ไม่งั้นใช้ General
+        const reassignToId = Number(req.query.reassignToId) || general.id;
+
+        // 1) ย้ายโพสต์ทั้งหมดในหมวดนี้ไป reassignToId
+        const { error: upErr } = await supabaseAdmin
+            .from("posts")
+            .update({ category_id: reassignToId })
+            .eq("category_id", id);
+        if (upErr) throw upErr;
+
+        // 2) ลบหมวด
+        const { error: delErr } = await supabaseAdmin
+            .from("categories").delete().eq("id", id);
+        if (delErr) throw delErr;
+
         res.status(200).json({ ok: true });
     } catch (e) {
         res.status(400).json({ error: e.message });
     }
 }
-
-// เฟส 4
-// เพิ่ม Create/Update/Delete

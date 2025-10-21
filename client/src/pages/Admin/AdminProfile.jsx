@@ -3,8 +3,7 @@ import { api } from "@/lib/api";
 import { uploadAvatar, removeAvatar } from "@/lib/avatars";
 import default_avatar from "@/assets/images/profile/default-avatar.png";
 import AdminTopBar from "@/components/Admin/AdminTopBar";
-import { useToaster } from "rsuite";
-import AppToast from "@/components/Toast/AppToast";
+import toast from "@/lib/toast";
 
 /** สำหรับลบไฟล์เก่าใน bucket 'avatars' */
 function storagePathFromUrl(url) {
@@ -32,28 +31,15 @@ export default function AdminProfile() {
     const [newAvatar, setNewAvatar] = useState(null); // { publicUrl, path }
 
     const fileRef = useRef(null);
-
-    const rsToaster = useToaster();
-    const toast = {
-        success: (title, description, opts) =>
-            rsToaster.push(<AppToast status="success" title={title} description={description} />, { placement: "bottomCenter", duration: 4000, ...(opts || {}) }),
-        error: (title, description, opts) =>
-            rsToaster.push(<AppToast status="error" title={title} description={description} />, { placement: "bottomCenter", duration: 4000, ...(opts || {}) }),
-        info: (title, description, opts) =>
-            rsToaster.push(<AppToast status="info" title={title} description={description} />, { placement: "bottomCenter", duration: 4000, ...(opts || {}) }),
-        warning: (title, description, opts) =>
-            rsToaster.push(<AppToast status="warning" title={title} description={description} />, { placement: "bottomCenter", duration: 4000, ...(opts || {}) }),
-        remove: (key) => rsToaster.remove(key),
-    };
+    const LOADING_SLOT = "adminProfile:upload";
+    useEffect(() => () => toast.flushSlot(LOADING_SLOT), []);
 
     // โหลดโปรไฟล์ครั้งแรก
     useEffect(() => {
-        let alive = true;
         (async () => {
             try {
                 const r = await api.get("/profile");
                 const u = r?.user || {};
-                if (!alive) return;
                 setMe(u);
                 setForm({
                     name: u.name || "",
@@ -67,12 +53,9 @@ export default function AdminProfile() {
             } catch {
                 toast.error("Load profile failed");
             } finally {
-                if (alive) setLoading(false);
+                setLoading(false);
             }
         })();
-        return () => {
-            alive = false;
-        };
     }, []);
 
     // อัปโหลด: พรีวิวเลย แต่ยังไม่ลบของเก่า จนกว่าจะ Save
@@ -81,31 +64,27 @@ export default function AdminProfile() {
 
         // validation เบา ๆ
         if (!/^image\/(png|jpe?g|webp)$/i.test(file.type)) {
-            toast.error("กรุณาใช้ประเภทไฟล์: JPG/PNG/WEBP");
-            // reset input เพื่อให้เลือกไฟล์เดิมได้อีกครั้ง
+            toast.error("Please use file type: JPG/PNG/WEBP.");
             if (fileRef.current) fileRef.current.value = "";
             return;
         }
         if (file.size > 2 * 1024 * 1024) {
-            toast.error("ขนาดไฟล์ต้องไม่เกิน: 2MB");
+            toast.error("File size is limited to 2MB.");
             if (fileRef.current) fileRef.current.value = "";
             return;
         }
 
-        // toast loading (sticky)
-        const key = toast.info("Uploading photo…", undefined, { duration: 0 });
+        toast.loadingIn(LOADING_SLOT, "Uploading photo…");
 
         try {
             const up = await uploadAvatar(file, me.id); // { publicUrl, path }
             setNewAvatar(up);
             setForm((s) => ({ ...s, profile_pic: up.publicUrl })); // ดูภาพได้เลย
-            toast.remove(key);
-            toast.success("Uploaded");
+            await toast.replaceIn(LOADING_SLOT, "success", "Image upload completed.");
         } catch (err) {
-            toast.remove(key);
-            toast.error(String(err?.message || "Upload failed"));
+            await toast.replaceIn(LOADING_SLOT, "error", "Upload failed", String(err?.message || "Please try again."));
         } finally {
-            if (fileRef.current) fileRef.current.value = "";
+            if (fileRef.current) fileRef.current.value = ""; // รีเซ็ต input
         }
     };
 
@@ -134,9 +113,9 @@ export default function AdminProfile() {
             setOriginalAvatarPath(storagePathFromUrl(nextAvatarUrl || ""));
             setNewAvatar(null);
 
-            toast.success("Saved profile", "Your profile has been successfully updated");
+            toast.success("Saved profile.", "Your profile has been successfully updated");
         } catch {
-            toast.error("Save failed");
+            toast.error("Save failed.");
         } finally {
             setSaving(false);
         }
