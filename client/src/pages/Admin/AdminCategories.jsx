@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 import { supabase } from "@/lib/supabaseClient";
-import { Message, useToaster } from "rsuite";
+import toast from "@/lib/toast";
 import AdminTopBar from "@/components/Admin/AdminTopBar";
 import CategoryList from "@/components/Admin/Category/List";
 import CategoryEditor from "@/components/Admin/Category/Editor";
@@ -14,7 +14,6 @@ export default function AdminCategories() {
     const [q, setQ] = useState("");
     const [list, setList] = useState([]);
     const [loading, setLoading] = useState(false);
-    const toaster = useToaster();
 
     const apiBase = (() => {
         const base = import.meta.env.VITE_SERVER_URL.replace(/\/+$/, "");
@@ -50,12 +49,12 @@ export default function AdminCategories() {
             });
             const json = await r.json().catch(() => ({}));
             if (!r.ok) throw new Error(json.error || "Save failed");
-            toaster.push(<Message type="success" closable>Saved</Message>, { placement: "bottomCenter" });
+            toast.success("Saved category.", "Category has been successfully saved.");
             setMode("list");
             setEditing(null);
             load();
         } catch (e) {
-            toaster.push(<Message type="error" closable>{e.message}</Message>, { placement: "bottomCenter" });
+            toast.error(String(e.message));
         }
     };
 
@@ -69,7 +68,7 @@ export default function AdminCategories() {
             });
             const json = await r.json().catch(() => ({}));
             if (!r.ok) throw new Error(json.error || "Delete failed");
-            toaster.push(<Message type="success" closable>Deleted</Message>, { placement: "bottomCenter" });
+            toast.success("Deleted.");
             setConfirm(null);
             if (mode !== "list") {
                 setMode("list");
@@ -77,7 +76,7 @@ export default function AdminCategories() {
             }
             load();
         } catch (e) {
-            toaster.push(<Message type="error" closable>{e.message}</Message>, { placement: "bottomCenter" });
+            toast.error(String(e.message));
         }
     };
 

@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabaseClient";
-import { Message, useToaster } from "rsuite";
+import toast from "@/lib/toast";
 
 export default function AdminUsers() {
     const [q, setQ] = useState("");
@@ -10,7 +10,6 @@ export default function AdminUsers() {
 
     const [edit, setEdit] = useState(null); 
     const [reset, setReset] = useState(null); 
-    const toaster = useToaster();
 
     async function fetchUsers() {
         setLoading(true);
@@ -25,7 +24,7 @@ export default function AdminUsers() {
             if (!r.ok) throw new Error(json.error || "Load failed");
             setList(json.users || []);
         } catch (e) {
-            toaster.push(<Message type="error" closable>{e.message}</Message>, { placement: "bottomCenter" });
+            toast.error(String(e.message));
         } finally {
             setLoading(false);
         }
@@ -107,7 +106,6 @@ export default function AdminUsers() {
 function EditUserModal({ data, onClose, onSaved }) {
     const [form, setForm] = useState({ ...data });
     const [loading, setLoading] = useState(false);
-    const toaster = useToaster();
 
     const save = async () => {
         setLoading(true);
@@ -131,10 +129,10 @@ function EditUserModal({ data, onClose, onSaved }) {
             });
             const json = await r.json().catch(() => ({}));
             if (!r.ok) throw new Error(json.error || "Update failed");
-            toaster.push(<Message type="success" closable>Updated</Message>, { placement: "bottomCenter" });
+            toast.success("Updated.");
             onSaved();
         } catch (e) {
-            toaster.push(<Message type="error" closable>{e.message}</Message>, { placement: "bottomCenter" });
+            toast.error(String(e.message));
         } finally {
             setLoading(false);
         }
@@ -185,7 +183,6 @@ function EditUserModal({ data, onClose, onSaved }) {
 function ResetPwModal({ data, onClose, onDone }) {
     const [pw, setPw] = useState("");
     const [loading, setLoading] = useState(false);
-    const toaster = useToaster();
 
     const submit = async () => {
         setLoading(true);
@@ -203,10 +200,10 @@ function ResetPwModal({ data, onClose, onDone }) {
             });
             const json = await r.json().catch(() => ({}));
             if (!r.ok) throw new Error(json.error || "Reset failed");
-            toaster.push(<Message type="success" closable>Password updated</Message>, { placement: "bottomCenter" });
+            toast.success("Password updated.");
             onDone();
         } catch (e) {
-            toaster.push(<Message type="error" closable>{e.message}</Message>, { placement: "bottomCenter" });
+            toast.error(String(e.message));
         } finally {
             setLoading(false);
         }

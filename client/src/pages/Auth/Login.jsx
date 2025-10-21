@@ -4,7 +4,7 @@ import { supabase } from "../../lib/supabaseClient.js";
 import TextField from "@/components/ui/TextField.jsx";
 import PasswordField from "@/components/ui/PasswordField.jsx";
 import { validateEmail, friendlyAuthError } from "@/lib/validators.js";
-import { useToaster, Message } from "rsuite";
+import toast from "@/lib/toast";
 
 export default function Login() {
 
@@ -14,7 +14,6 @@ export default function Login() {
 
     const navigate = useNavigate();
     const location = useLocation();
-    const toaster = useToaster();
 
     const set = (k, v) => setForm(s => ({ ...s, [k]: v }));
 
@@ -38,27 +37,14 @@ export default function Login() {
             });
             if (error) throw error;
 
-            toaster.push(
-                <Message type="success" closable>เข้าสู่ระบบสำเร็จ</Message>,
-                { placement: "bottomCenter" }
-            );
+            toast.success("Login successful.");
 
             const to = location.state?.from?.pathname || "/profile";
             navigate(to, { replace: true });
 
         } catch (err) {
             const msg = friendlyAuthError(err?.message);   //map ข้อความจาก supabase
-            toaster.push(
-                <Message type="error" closable>
-                    <div className="font-medium">
-                        {msg.title ?? "Your password is incorrect or this email doesn’t exist"}
-                    </div>
-                    <div className="text-sm opacity-80">
-                        {msg.detail ?? "Please try another password or email"}
-                    </div>
-                </Message>,
-                { placement: "bottomCenter", duration: 5000 }
-            );
+            toast.error("Your password is incorrect or this email doesn’t exist.","Please try another password or email.");
             setErrors({});
         } finally {
             setLoading(false);

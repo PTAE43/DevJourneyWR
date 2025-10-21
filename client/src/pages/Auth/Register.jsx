@@ -10,7 +10,7 @@ import {
     validateUsername,
     friendlyAuthError,
 } from "@/lib/validators.js";
-import { useToaster, Message } from "rsuite";
+import toast from "@/lib/toast";
 
 export default function Register() {
     const [form, setForm] = useState({
@@ -22,7 +22,6 @@ export default function Register() {
     const [loading, setLoading] = useState(false);
     const [errors, setErrors] = useState({});
     const navigate = useNavigate();
-    const toaster = useToaster();
     const set = (k, v) => setForm((s) => ({ ...s, [k]: v }));
 
     function validateAll() {
@@ -68,12 +67,6 @@ export default function Register() {
             navigate("/success", { replace: true });
         } catch (err) {
             const msg = friendlyAuthError(err?.message);
-            toaster.push(
-                <Message type="error" closable>
-                    {msg}
-                </Message>,
-                { placement: "bottomCenter" }
-            );
             if (String(msg).includes("อีเมลนี้ถูกใช้แล้ว"))
                 setErrors((s) => ({ ...s, email: msg }));
         } finally {

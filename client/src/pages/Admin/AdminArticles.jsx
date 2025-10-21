@@ -1,4 +1,3 @@
-// client/src/pages/Admin/AdminArticles.jsx
 import { useState } from "react";
 import ArticleList from "@/components/Admin/Article/List";
 import ArticleEditor from "@/components/Admin/Article/Editor";
