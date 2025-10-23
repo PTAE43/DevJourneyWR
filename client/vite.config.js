@@ -11,9 +11,17 @@ export default defineConfig({
   },
   server: {
     proxy: {
-      "/api": {
-        target: "http://localhost:3000",
+      // endpoint เดิมของโปรเจ็กต์
+      '/api': {
+        target: 'https://server-six-nu-81.vercel.app',
         changeOrigin: true,
+        secure: true,
+      },
+      // endpoint ใหม่สำหรับ notifications
+      '/apinoti': {
+        target: 'https://server-six-nu-81.vercel.app',
+        changeOrigin: true,
+        secure: true,
       },
     },
   },
