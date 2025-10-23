@@ -16,7 +16,7 @@ function timeago(iso) {
 
 // สร้าง base สำหรับเรียก API (ใช้ /apinoti ตามที่ย้ายไปใหม่)
 const apiBase = (() => {
-    const root = (import.meta.env.VITE_SERVER_URL || "").replace(/\/+$/, "");
+    const root = (import.meta.env.VITE_SERVER_URL_V2 || "").replace(/\/+$/, "");
     if (import.meta.env.DEV) return "/apinoti";
     return root.endsWith("/apinoti") ? root : `${root}/apinoti`;
 })();
