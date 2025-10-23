@@ -1,5 +1,10 @@
 import { supabase } from "@/lib/supabaseClient";
 
+const API_BASE = (() => {
+    if (import.meta.env.DEV) return "/api";
+    return (import.meta.env.VITE_SERVER_URL || "").replace(/\/+$/, "");
+})();
+
 const isPublicGet = (path, method) => {
     if (method !== "GET") return false;
     if (path === "/categories") return true;
@@ -11,7 +16,8 @@ export async function apiFetch(
     path,
     { method = "GET", params, body, signal } = {}
 ) {
-    let url = `${import.meta.env.VITE_SERVER_URL}${path}`;
+    const normPath = path.startsWith("/") ? path : `/${path}`;
+    let url = `${API_BASE}${normPath}`;
 
     if (params && Object.keys(params).length) {
         const qs = new URLSearchParams(
@@ -22,16 +28,14 @@ export async function apiFetch(
         if (qs) url += `?${qs}`;
     }
 
-    const needAuth = !isPublicGet(path, method);
+    const needAuth = !isPublicGet(normPath, method);
 
     let token = null;
     if (needAuth) {
         try {
             const { data } = await supabase.auth.getSession();
             token = data?.session?.access_token || null;
-        } catch {
-            /* ignore */
-        }
+        } catch { }
     }
 
     const headers = {
@@ -53,17 +57,18 @@ export async function apiFetch(
         signal,
     });
 
-    // safe parse
+    // เมื่อ fetch เสร็จ
     const text = await res.text();
     let json = {};
     try {
         json = text ? JSON.parse(text) : {};
     } catch {
-        json = { raw: text }; // กรณี response ไม่ใช่ JSON
+        json = { raw: text };
     }
 
     if (!res.ok) {
-        throw new Error(json?.error || json?.message || `HTTP ${res.status}`);
+        const msg = json?.error || json?.message || (json?.raw ? String(json.raw).slice(0, 300) : `HTTP ${res.status}`);
+        throw new Error(msg);
     }
     return json;
 }
@@ -74,3 +79,5 @@ export const api = {
     put: (path, opts) => apiFetch(path, { ...(opts || {}), method: "PUT" }),
     delete: (path, opts) => apiFetch(path, { ...opts, method: "DELETE" }),
 };
+
+export { API_BASE };

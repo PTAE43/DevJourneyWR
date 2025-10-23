@@ -1,9 +1,10 @@
 import { useEffect, useRef, useState, useCallback } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import { Bell, ChevronDown, LogOut, KeyRound, User as UserIcon, LayoutDashboard } from "lucide-react";
+import { ChevronDown, LogOut, KeyRound, User as UserIcon, LayoutDashboard } from "lucide-react";
 import { supabase } from "@/lib/supabaseClient";
 import { useAuth } from "@/contexts/AuthContext";
 import default_avatar from "@/assets/images/profile/default-avatar.png"
+import BellMenu from "../TopBar/BellMenu";
 
 export default function UserMenu({ me }) {
     const { isAuthed } = useAuth();
@@ -50,11 +51,8 @@ export default function UserMenu({ me }) {
 
     return (
         <div className="flex items-center gap-3 relative" ref={popRef}>
-            <button className="relative rounded-full p-1 hover:bg-black/5" aria-label="Notifications" type="button">
-                <Bell className="h-5 w-5" />
-                {/* badge mock */}
-                <span className="absolute -right-0.5 -top-0.5 h-2 w-2 rounded-full bg-red-500" />
-            </button>
+            
+            <BellMenu />
 
             <button
                 onClick={() => setOpen(v => !v)}
@@ -64,7 +62,7 @@ export default function UserMenu({ me }) {
                 type="button"
             >
                 <img
-                    key={avatarSrc} 
+                    key={avatarSrc}
                     src={avatarSrc}
                     onError={(e) => { e.currentTarget.src = default_avatar; }}
                     className="h-8 w-8 rounded-full object-cover"
@@ -88,7 +86,7 @@ export default function UserMenu({ me }) {
                     <Link to="/profile/reset" role="menuitem" className="flex items-center gap-2 px-4 py-2 hover:bg-neutral-50">
                         <KeyRound className="h-4 w-4" /> Reset password
                     </Link>
-                    {["admin","superadmin"].includes(me?.role) && (
+                    {["admin", "superadmin"].includes(me?.role) && (
                         <Link to="/admin" role="menuitem" className="flex items-center gap-2 px-4 py-2 hover:bg-neutral-50">
                             <LayoutDashboard className="h-4 w-4" /> Admin panel
                         </Link>

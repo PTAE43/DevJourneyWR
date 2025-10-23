@@ -60,13 +60,13 @@ async function getOwnerLikes(req, res) {
     const { data, error, count } = await supabaseAdmin
         .from("likes")
         .select(`
-            id, post_id, user_id, created_at,
+            id, post_id, user_id, liked_at:liked_at,
             actor:users!likes_user_id_fkey ( id, name, profile_pic ),
             post:posts!likes_post_id_fkey ( id, title, author_id )
         `, { count: "exact" })
         // กรองเฉพาะไลก์ที่เกิดบนโพสต์ของเรา
         .eq("post.author_id", me.id)
-        .order("created_at", { ascending: false })
+        .order("liked_at", { ascending: false })
         .range(from, to);
 
     if (error) return res.status(400).json({ error: error.message });
@@ -116,7 +116,11 @@ async function unlike(req, res) {
         .delete()
         .eq("post_id", postId)
         .eq("user_id", user.id);
-    if (error) throw error;
+    if (error) {
+        return res.status(400).json({
+            error: error.message, code: error.code, details: error.details, hint: error.hint
+        });
+    }
 
     const { count } = await supabaseAdmin
         .from("likes")

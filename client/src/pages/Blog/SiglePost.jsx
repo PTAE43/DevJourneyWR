@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, useRef } from "react";
 import { useParams, Link } from "react-router-dom";
 import { supabase } from "@/lib/supabaseClient.js";
 import SkeletonPost from "@/components/Skeletons/SkeletonsPost.jsx";
@@ -15,7 +15,8 @@ import Facebook_black from "@/assets/images/posts/Facebook_black.png";
 import Copy_light from "@/assets/images/posts/Copy_light.png";
 import LinkedIN_black from "@/assets/images/posts/LinkedIN_black.png";
 import X_logo from "@/assets/images/posts/X_logo.jpg";
-import default_avatar from "@/assets/images/profile/default-avatar.png"
+import default_avatar from "@/assets/images/profile/default-avatar.png";
+import { useLocation } from 'react-router-dom';
 
 const COMMENTS_PAGE_SIZE = 5;
 
@@ -40,6 +41,50 @@ export default function SiglePost() {
     const [authGateOpen, setAuthGateOpen] = useState(false);
 
     const { slugOrId } = useParams();
+
+    const location = useLocation()
+    const targetIdRef = useRef(null);
+    const autoLoadingRef = useRef(false);
+
+    useEffect(() => {
+        if (!location.hash) return;
+
+        const id = location.hash.replace('#', '');
+        targetIdRef.current = id;
+
+        if (scrollAndHighlightById(id)) {
+            targetIdRef.current = null;
+            autoLoadingRef.current = false;
+            return;
+        }
+
+        if (post?.id && hasMore && !loadingMore) {
+            autoLoadingRef.current = true;
+            const next = page + 1;
+            setPage(next);
+            fetchComments(post.id, { reset: false, pageArg: next });
+        }
+    }, [location.hash, post?.id]);
+
+    useEffect(() => {
+        const id = targetIdRef.current;
+        if (!id) return;
+
+        if (scrollAndHighlightById(id)) {
+            targetIdRef.current = null;
+            autoLoadingRef.current = false;
+            return;
+        }
+
+        if (autoLoadingRef.current && hasMore && !loadingMore && post?.id) {
+            const next = page + 1;
+            setPage(next);
+            fetchComments(post.id, { reset: false, pageArg: next });
+        } else if (!hasMore) {
+            autoLoadingRef.current = false;
+        }
+    }, [comments, hasMore, loadingMore, post?.id]);
+
 
     // Load post
     useEffect(() => {
@@ -86,11 +131,11 @@ export default function SiglePost() {
     // Load comments
     async function fetchComments(postId, { reset = false, pageArg = 1 } = {}) {
         if (!postId) return;
-
         reset ? setLoadingComments(true) : setLoadingMore(true);
         try {
             const limit = COMMENTS_PAGE_SIZE;
             const pageToUse = Number.isFinite(pageArg) ? pageArg : 1;
+
             const res = await api.get("/comments", {
                 params: { postId, order: filter, page: pageToUse, limit }
             });
@@ -98,12 +143,9 @@ export default function SiglePost() {
             const list = mapComments(res?.comments);
             setComments(prev => {
                 const merged = reset ? list : [...prev, ...list];
-                // กันคอมเมนต์ซ้ำด้วย id
                 const seen = new Set();
                 const dedup = [];
-                for (const c of merged) {
-                    if (!seen.has(c.id)) { seen.add(c.id); dedup.push(c); }
-                }
+                for (const c of merged) if (!seen.has(c.id)) { seen.add(c.id); dedup.push(c); }
                 return dedup;
             });
 
@@ -112,11 +154,16 @@ export default function SiglePost() {
                     ? res.currentPage < res.totalPages
                     : undefined;
 
-            setHasMore(
-                typeof moreByMeta === "boolean" ? moreByMeta : list.length === limit
-            );
+            setHasMore(typeof moreByMeta === "boolean" ? moreByMeta : list.length === limit);
         } catch (e) {
-            toast.error(String(e.message || "Load comments failed."));
+            // ถ้าเป็น autoload เพื่อตามหา hash ให้หยุดลูปและไม่โชว์ toast ดังๆ
+            if (autoLoadingRef.current) {
+                autoLoadingRef.current = false;
+                targetIdRef.current = null;
+                console.warn("Autoload comments aborted:", e?.message || e);
+            } else {
+                toast.error(String(e.message || "Load comments failed."));
+            }
         } finally {
             reset ? setLoadingComments(false) : setLoadingMore(false);
         }
@@ -217,6 +264,16 @@ export default function SiglePost() {
     const fbHref = `https://www.facebook.com/sharer/sharer.php?u=${encodedUrl}`;
     const liHref = `https://www.linkedin.com/sharing/share-offsite/?url=${encodedUrl}`;
     const xHref = `https://twitter.com/intent/tweet?url=${encodedUrl}&text=${encodedText}`;
+
+    function scrollAndHighlightById(id) {
+        const el = document.getElementById(id);
+        if (!el) return false;
+        const y = el.getBoundingClientRect().top + window.scrollY - 120; // offset 120px
+        window.scrollTo({ top: y, behavior: 'smooth' });
+        el.classList.add('ring-2', 'ring-amber-400', 'rounded');
+        setTimeout(() => el.classList.remove('ring-2', 'ring-amber-400', 'rounded'), 1800);
+        return true;
+    }
 
     return (
         <article className="mx-auto max-w-[1200px] px-4 pb-8">
@@ -370,9 +427,9 @@ export default function SiglePost() {
 
                         {comments.map((c) => (
                             <div
+                                id={`comment-${c.id}`}
                                 key={c.id}
-                                className={`border-b-2 p-4 px-4 ${c.user_id === user?.id ? "bg-[#fafafa] rounded-lg px-2" : ""
-                                    }`}
+                                className={`border-b-2 p-4 px-4 ${c.user_id === user?.id ? "bg-[#fafafa] rounded-lg px-2" : ""}`}
                             >
                                 <div className="flex items-center font-semibold gap-3">
                                     <img
