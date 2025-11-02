@@ -93,20 +93,51 @@ export default function SiglePost() {
             try {
                 const asNumber = Number(slugOrId);
                 const isId = Number.isFinite(asNumber) && String(asNumber) === slugOrId;
-
                 if (!isId) throw new Error("Invalid post id.");
-                const { data, error } = await supabase
+
+                let { data, error } = await supabase
                     .from("posts")
                     .select(`
-            id, title, description, content, images, created_at, published, likes_count, category_id,
-            category:categories!posts_category_id_fkey ( id, name )
-          `)
+                        id, title, description, content, images, created_at, published, likes_count, category_id, author_id,
+                        category:categories!posts_category_id_fkey ( id, name ),
+                        author:users!posts_author_id_fkey ( id, name, profile_pic, bio )
+                        `)
                     .eq("id", asNumber)
                     .single();
 
-                if (error) throw error;
+                if (error?.message?.includes("relationship") || error?.message?.includes("could not find")) {
+                    const a = await supabase
+                        .from("posts")
+                        .select(`id, title, description, content, images, created_at, published, likes_count, category_id, author_id,
+                   category:categories!posts_category_id_fkey ( id, name )`)
+                        .eq("id", asNumber)
+                        .single();
+                    if (a.error) throw a.error;
+                    const postOnly = a.data;
 
-                setPost(data || null);
+                    let author = null;
+                    if (postOnly?.author_id) {
+                        const b = await supabase
+                            .from("users")
+                            .select("id, name, profile_pic, bio")
+                            .eq("id", postOnly.author_id)
+                            .single();
+                        if (!b.error) author = b.data;
+                    }
+                    data = { ...postOnly, author };
+                } else if (error) {
+                    throw error;
+                }
+
+                // map
+                const mapped = {
+                    ...data,
+                    author_name: data?.author?.name ?? "—",
+                    author_avatar: data?.author?.profile_pic ?? "",
+                    author_bio: data?.author?.bio ?? "",
+                };
+
+                setPost(mapped);
                 window.scrollTo({ top: 0, behavior: "smooth" });
             } catch (e) {
                 setError(e.message || "Failed to load post.");
@@ -485,26 +516,26 @@ export default function SiglePost() {
                         <div className="rounded-xl border border-black/10 bg-[var(--color-bg-author)] p-4">
                             <div className="flex items-center font-semibold border-b-2 pb-4 gap-3">
                                 <img
-                                    src={post.profile || default_avatar}
-                                    alt={post.author || "Author"}
+                                    src={post.author_avatar || default_avatar}
+                                    alt={post.author_name || "Author"}
                                     className="w-[44px] h-[44px] rounded-full object-cover"
                                 />
                                 <div>
                                     <div className="text-sm text-gray-400">Author</div>
-                                    <span className="text-lg">{post.author || "—"}</span>
+                                    <span className="text-lg">{post.author_name || "—"}</span>
                                 </div>
                             </div>
 
                             <div className="pt-4 text-md text-gray-600 leading-relaxed">
-                                <p className="mt-2">
-                                    I am a pet enthusiast and freelance writer who specializes in
-                                    animal behavior and care. With a deep love for cats, I enjoy
-                                    sharing insights on feline companionship and wellness.
-                                </p>
-                                <p className="mt-6">
-                                    When I’m not writing, I spend time volunteering at my local
-                                    animal shelter, helping cats find loving homes.
-                                </p>
+                                {post.author_bio
+                                    ? post.author_bio
+                                    : (
+                                        <>
+                                            <p className="mt-2">
+                                                This author hasn’t written a bio yet.
+                                            </p>
+                                        </>
+                                    )}
                             </div>
                         </div>
                     </div>

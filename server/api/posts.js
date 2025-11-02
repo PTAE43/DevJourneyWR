@@ -32,9 +32,10 @@ async function getPosts(req, res) {
         let query = supabaseAdmin
             .from("posts")
             .select(`
-                id, title, description, images, content, created_at, category_id, status_id, published, likes_count, author_id,
-                category:categories!posts_category_id_fkey ( id, name )
-            `, { count: "exact" })
+            id, title, description, images, content, created_at,
+            category_id, status_id, published, likes_count, author_id,
+            category:categories!posts_category_id_fkey ( id, name )
+        `, { count: "exact" })
             .order("created_at", { ascending: false });
 
         if (scope === "public") {
@@ -58,12 +59,31 @@ async function getPosts(req, res) {
         const { data, error, count } = await query.range(from, to);
         if (error) throw error;
 
+        // enrich author
+        let posts = data ?? [];
+        const authorIds = [...new Set(posts.map(p => p.author_id).filter(Boolean))];
+
+        if (authorIds.length) {
+            const { data: authors, error: aerr } = await supabaseAdmin
+                .from("users")
+                .select("id, name, profile_pic")
+                .in("id", authorIds);
+
+            if (!aerr && Array.isArray(authors)) {
+                const amap = new Map(authors.map(a => [a.id, a]));
+                posts = posts.map(p => ({
+                    ...p,
+                    author: amap.get(p.author_id) || null,
+                }));
+            }
+        }
+
         const total = count || 0;
         const totalPages = Math.max(1, Math.ceil(total / pageSize));
-        const hasMore = from + (data?.length || 0) < total;
+        const hasMore = from + (posts?.length || 0) < total;
 
         res.status(200).json({
-            posts: data ?? [],
+            posts,                // ← ส่ง posts ที่มี author
             currentPage,
             pageSize,
             total,
