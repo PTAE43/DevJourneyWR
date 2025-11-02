@@ -26,7 +26,7 @@ async function getMe(req, res) {
 
         const { data, error } = await supabaseAdmin
             .from("users")
-            .select("id, username, name, profile_pic, role")
+            .select("id, username, name, profile_pic, role, bio")
             .eq("id", user.id)
             .single();
 
@@ -52,6 +52,10 @@ async function upsertMe(req, res) {
         const name = (body.name || "").trim();
         const username = (body.username || "").trim();
         const profile_pic = body.profile_pic || null;
+        // bio (จำกัด 120 ตัวอักษร) ถ้าว่างให้เป็น null
+        let bio = typeof body.bio === "string" ? body.bio.trim() : "";
+        if (bio.length > 300) bio = bio.slice(0, 300);
+        const bioToSave = bio === "" ? null : bio;
 
         const USERNAME_RE = /^[A-Za-z0-9._-]{3,24}$/;
         if (!USERNAME_RE.test(username)) {
@@ -84,7 +88,7 @@ async function upsertMe(req, res) {
         const { data, error } = await supabaseAdmin
             .from("users")
             .upsert(
-                { id: authed.id, name, username, profile_pic, role: roleToKeep },
+                { id: authed.id, name, username, profile_pic, bio: bioToSave, role: roleToKeep },
                 { onConflict: "id" }
             )
             .select()

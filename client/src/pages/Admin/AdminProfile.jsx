@@ -189,7 +189,7 @@ export default function AdminProfile() {
             </div>
 
             <div className="mt-10 px-12 grid gap-4 w-full">
-                <Field label="Bio (max 120 letters)">
+                <Field label="Bio (max 300 letters)">
                     <textarea
                         rows={4}
                         className="w-full rounded-md border px-3 py-2"

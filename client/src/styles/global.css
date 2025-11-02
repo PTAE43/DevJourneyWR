@@ -1,0 +1,16 @@
+.blog-dd .rs-dropdown-toggle {
+    height: 48px;
+    border-radius: 0.375rem;
+    padding: 0 1rem;
+    background: var(--color-bg-articles);
+    color: var(--color-text-articles);
+    border: 1px solid transparent;
+}
+
+.blog-dd .rs-dropdown-toggle:hover {
+    background: var(--color-text-articles-hover);
+}
+
+.blog-dd .rs-dropdown-menu {
+    border-radius: 0.5rem;
+}

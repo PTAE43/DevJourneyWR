@@ -1,4 +1,4 @@
-import hhLogo from "@/assets/image-header/hh.png";
+import wrLogo from "@/assets/image-header/wrlogo.png";
 import menutoggle from "@/assets/image-header/menu-toggle.png";
 import React, { useEffect, useRef, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
@@ -68,7 +68,7 @@ export default function NavBar() {
                 <div className="flex justify-between items-center md:h-[48px]">
                     {/* Logo */}
                     <Link to="/" className="shrink-0">
-                        <img src={hhLogo} alt="Logo" className="h-[28px] w-auto md:h-[30px]" />
+                        <img src={wrLogo} alt="Logo" className="h-[28px] w-auto md:h-[30px]" />
                     </Link>
 
                     {/* Mobile toggle */}
